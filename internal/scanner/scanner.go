@@ -38,7 +38,7 @@ type Scanner struct {
 func New(host string, dataPort, controlPort uint16, identity string) *Scanner {
 	var token [8]byte
 	rand.Read(token[:6])
-	slog.Debug("scanner created", "host", host, "dataPort", dataPort, "controlPort", controlPort, "token", fmt.Sprintf("%x", token))
+	slog.Debug("scanner created", "host", host, "dataPort", dataPort, "controlPort", controlPort, "authentication", "configured")
 	return &Scanner{
 		host:        host,
 		dataPort:    dataPort,

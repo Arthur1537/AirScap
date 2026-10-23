@@ -70,7 +70,7 @@ func main() {
 		// Derive password from serial if not explicitly set
 		if password == "" {
 			password = vens.PasswordFromSerial(info.Serial)
-			slog.Info("password derived from serial", "password", password)
+			slog.Info("scanner password derived from serial")
 		}
 	}
 
@@ -80,7 +80,7 @@ func main() {
 		slog.Error("failed to compute identity", "err", err)
 		os.Exit(1)
 	}
-	slog.Info("identity computed", "identity", identity)
+	slog.Info("scanner identity computed")
 
 	// Create and connect scanner
 	sc := scanner.New(scannerIP, vens.DefaultDataPort, vens.DefaultControlPort, identity)
