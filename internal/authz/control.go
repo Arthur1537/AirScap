@@ -74,11 +74,28 @@ func NewControl(baseURL, token string, client *http.Client) (*Control, error) {
 }
 
 type reservation struct {
-	ReservationID string `json:"reservation_id"`
-	JobID         string `json:"job_id"`
-	Mode          string `json:"mode"`
-	Source        string `json:"source"`
-	Status        string `json:"status"`
+	ReservationID string           `json:"reservation_id"`
+	JobID         string           `json:"job_id"`
+	Mode          string           `json:"mode"`
+	Source        string           `json:"source"`
+	Status        string           `json:"status"`
+	Scan          *json.RawMessage `json:"scan"`
+}
+
+// scanSettings decodes the job's settings strictly: all four fields, no
+// others, supported values only.
+func (r reservation) scanSettings() (ScanSettings, bool) {
+	var s ScanSettings
+	if r.Scan == nil {
+		return s, false
+	}
+	decoder := json.NewDecoder(bytes.NewReader(*r.Scan))
+	decoder.DisallowUnknownFields()
+	var fields map[string]json.RawMessage
+	if json.Unmarshal(*r.Scan, &fields) != nil || len(fields) != 4 || decoder.Decode(&s) != nil {
+		return s, false
+	}
+	return s, s.Valid()
 }
 
 // Authorize implements Authorizer.
@@ -99,9 +116,10 @@ func (c *Control) Authorize(ctx context.Context, source Source) (Grant, error) {
 	if err := json.Unmarshal(body, &r); err != nil {
 		return nil, fmt.Errorf("%w: invalid reservation response", ErrNotAuthorized)
 	}
+	settings, settingsOK := r.scanSettings()
 	if !reservationPattern.MatchString(r.ReservationID) || !printablePattern.MatchString(r.JobID) ||
 		r.Status != "reserved" || r.Source != string(source) ||
-		(r.Mode != "" && !printablePattern.MatchString(r.Mode)) {
+		(r.Mode != "" && !printablePattern.MatchString(r.Mode)) || !settingsOK {
 		// A reservation we cannot reference safely is released if possible.
 		if reservationPattern.MatchString(r.ReservationID) {
 			c.post(ctx, "/internal/v1/reservations/"+r.ReservationID+"/finish",
@@ -109,7 +127,7 @@ func (c *Control) Authorize(ctx context.Context, source Source) (Grant, error) {
 		}
 		return nil, fmt.Errorf("%w: unexpected reservation response", ErrNotAuthorized)
 	}
-	return &controlGrant{control: c, r: r}, nil
+	return &controlGrant{control: c, r: r, settings: settings}, nil
 }
 
 func (c *Control) post(ctx context.Context, path string, payload any) ([]byte, int, error) {
@@ -161,9 +179,12 @@ func refusal(status int, body []byte) string {
 type controlGrant struct {
 	control  *Control
 	r        reservation
+	settings ScanSettings
 	once     sync.Once
 	finished error
 }
+
+func (g *controlGrant) ScanSettings() ScanSettings { return g.settings }
 
 func (g *controlGrant) ReservationID() string { return g.r.ReservationID }
 func (g *controlGrant) JobID() string         { return g.r.JobID }
