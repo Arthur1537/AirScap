@@ -38,48 +38,21 @@ func main() {
 	)))
 
 	// Parse configuration from environment variables
-	scannerIP := os.Getenv("AIRSCAP_SCANNER_IP")
-	password := os.Getenv("AIRSCAP_PASSWORD")
-	passwordFile := os.Getenv("AIRSCAP_PASSWORD_FILE")
 	listenPort := envInt("AIRSCAP_LISTEN_PORT", 8080)
 	deviceName := os.Getenv("AIRSCAP_DEVICE_NAME")
 	dataDir := envStr("AIRSCAP_DATA_DIR", os.Getenv("STATE_DIRECTORY"))
 
-	// Resolve password
-	if password == "" && passwordFile != "" {
-		data, err := os.ReadFile(passwordFile)
-		if err != nil {
-			slog.Error("failed to read password file", "path", passwordFile, "err", err)
-			os.Exit(1)
-		}
-		password = strings.TrimSpace(string(data))
+	// Explicit scanner address and password only: no broadcast discovery,
+	// no serial-derived default password (cmd/airscap/scanner_target.go).
+	scannerIP, password, err := scannerTarget(os.Getenv("AIRSCAP_SCANNER_IP"),
+		os.Getenv("AIRSCAP_PASSWORD"), os.Getenv("AIRSCAP_PASSWORD_FILE"))
+	if err != nil {
+		slog.Error("scanner configuration refused", "err", err)
+		os.Exit(1)
 	}
 	vens.RegisterSecret(password)
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
-
-	// Discover scanner if IP not specified, or if password is empty (need serial)
-	if scannerIP == "" || password == "" {
-		slog.Info("discovering scanner...")
-		opts := vens.DiscoveryOptions{Timeout: 30 * time.Second, ScannerIP: scannerIP}
-		info, err := vens.FindScanner(ctx, opts)
-		if err != nil {
-			slog.Error("scanner discovery failed", "err", err)
-			os.Exit(1)
-		}
-		if scannerIP == "" {
-			scannerIP = info.DeviceIP
-		}
-		vens.RegisterSecret(info.Serial)
-		slog.Info("scanner found", "ip", scannerIP, "name", info.Name, "serial", vens.RedactSerial(info.Serial))
-
-		// Derive password from serial if not explicitly set
-		if password == "" {
-			password = vens.PasswordFromSerial(info.Serial)
-			vens.RegisterSecret(password)
-			slog.Info("scanner password derived from serial")
-		}
-	}
 
 	// Compute identity from password
 	identity, err := vens.ComputeIdentity(password)
