@@ -3,6 +3,7 @@ package scanner
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -18,6 +19,7 @@ import (
 
 	"github.com/jlaffaye/ftp"
 
+	"github.com/mzyy94/airscap/internal/authz"
 	"github.com/mzyy94/airscap/internal/config"
 	"github.com/mzyy94/airscap/internal/vens"
 	"github.com/mzyy94/airscap/ndlocr"
@@ -141,10 +143,15 @@ func SettingsToScanConfig(s config.Settings) vens.ScanConfig {
 	return cfg
 }
 
-// scanWithPartial runs a scan and returns non-empty pages even on error,
-// so that partial results can still be saved when the scanner hangs midway.
+// scanWithPartial runs a button scan and returns non-empty pages even on
+// error, so that partial results can still be saved when the scanner hangs
+// midway. Pages of a scan without (or after losing) authorization are never
+// returned.
 func scanWithPartial(sc *Scanner, cfg vens.ScanConfig) ([]vens.Page, error) {
-	pages, err := sc.Scan(cfg, nil)
+	pages, err := sc.Scan(context.Background(), authz.SourceButton, cfg, nil)
+	if errors.Is(err, authz.ErrNotAuthorized) {
+		return nil, err
+	}
 	var nonEmpty []vens.Page
 	for _, p := range pages {
 		if len(p.JPEG) > 0 {

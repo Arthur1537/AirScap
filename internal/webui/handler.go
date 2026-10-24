@@ -5,6 +5,7 @@ import (
 	"embed"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"image"
 	_ "image/jpeg"
@@ -13,6 +14,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/mzyy94/airscap/internal/authz"
 	"github.com/mzyy94/airscap/internal/config"
 	"github.com/mzyy94/airscap/internal/scanner"
 	"github.com/mzyy94/airscap/internal/vens"
@@ -206,7 +208,11 @@ func (h *handler) handleScanPreview(w http.ResponseWriter, r *http.Request) {
 	cfg := scanner.SettingsToScanConfig(s)
 
 	slog.Info("scan preview starting", "colorMode", cfg.ColorMode, "quality", cfg.Quality, "duplex", cfg.Duplex)
-	pages, err := h.sc.Scan(cfg, nil)
+	pages, err := h.sc.Scan(r.Context(), authz.SourcePreview, cfg, nil)
+	if errors.Is(err, authz.ErrNotAuthorized) {
+		writeJSONError(w, http.StatusForbidden, "scan_not_authorized")
+		return
+	}
 	if err != nil {
 		slog.Error("scan preview failed", "err", err)
 		writeJSONError(w, http.StatusInternalServerError, err.Error())

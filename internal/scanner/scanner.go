@@ -3,12 +3,15 @@ package scanner
 import (
 	"context"
 	"crypto/rand"
+	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/mzyy94/airscap/internal/authz"
 	"github.com/mzyy94/airscap/internal/vens"
 )
 
@@ -28,7 +31,11 @@ type Scanner struct {
 	deviceName       string           // full device name with manufacturer from TCP GET_SET sub=0x12
 	firmwareRevision string           // firmware revision from device name suffix (e.g. "0M00")
 	scanParams       *vens.ScanParams // capabilities from INQUIRY VPD 0xF0
-	wifiState        uint32           // last GET_WIFI_STATUS state (signal strength, 0 to 3)
+	authorizer       authz.Authorizer // nil: every scan is refused
+	// openSession sends the scan commands; tests replace it with a
+	// simulated scanner. nil: the real data channel.
+	openSession func(cfg vens.ScanConfig) (pageStream, error)
+	wifiState   uint32 // last GET_WIFI_STATUS state (signal strength, 0 to 3)
 
 	reconnCancel context.CancelFunc
 	reconnDone   chan struct{}
@@ -171,28 +178,146 @@ func (s *Scanner) Connect(ctx context.Context) error {
 	return nil
 }
 
-// StartScan begins a lazy scan session. Pages are pulled one at a time via
-// ScanSession.NextPage, allowing the client to stop after any page.
-func (s *Scanner) StartScan(cfg vens.ScanConfig) (*vens.ScanSession, error) {
-	if !s.Online() {
-		return nil, fmt.Errorf("scanner not connected")
-	}
-	slog.Info("starting scan session", "colorMode", cfg.ColorMode, "quality", cfg.Quality, "duplex", cfg.Duplex, "paperSize", cfg.PaperSize)
-	dataCh := vens.NewDataChannel(s.host, s.dataPort, s.token)
-	return dataCh.StartScan(cfg)
+// pageStream is a running scan: vens.ScanSession or a simulated scanner.
+type pageStream interface {
+	NextPage() (vens.Page, error)
+	Close() error
 }
 
-// Scan executes a scan with the given config and returns pages.
-func (s *Scanner) Scan(cfg vens.ScanConfig, onPage func(vens.Page)) ([]vens.Page, error) {
+// SetAuthorizer sets who grants scans (ScanSnap Control). Without one every
+// scan is refused.
+func (s *Scanner) SetAuthorizer(a authz.Authorizer) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.authorizer = a
+}
+
+func (s *Scanner) currentAuthorizer() authz.Authorizer {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.authorizer == nil {
+		return authz.Deny{}
+	}
+	return s.authorizer
+}
+
+// StartScan is the only way to start a physical scan. It obtains a grant
+// for source before sending the first scan command (the data channel's
+// StartScan already feeds the first sheet); without one nothing is sent.
+// Pages are pulled one at a time via AuthorizedSession.NextPage.
+func (s *Scanner) StartScan(ctx context.Context, source authz.Source, cfg vens.ScanConfig) (*AuthorizedSession, error) {
 	if !s.Online() {
 		return nil, fmt.Errorf("scanner not connected")
 	}
-	slog.Info("starting scan", "colorMode", cfg.ColorMode, "quality", cfg.Quality, "duplex", cfg.Duplex, "paperSize", cfg.PaperSize)
-	dataCh := vens.NewDataChannel(s.host, s.dataPort, s.token)
-	pages, err := dataCh.RunScan(cfg, onPage)
+	grant, err := s.currentAuthorizer().Authorize(ctx, source)
 	if err != nil {
-		slog.Warn("scan error", "err", err, "pages_so_far", len(pages))
-		return pages, err
+		slog.Warn("scan refused", "source", source, "err", err)
+		return nil, err
+	}
+	slog.Info("starting scan session", "source", source, "job", grant.JobID(), "mode", grant.Mode(),
+		"colorMode", cfg.ColorMode, "quality", cfg.Quality, "duplex", cfg.Duplex, "paperSize", cfg.PaperSize)
+
+	open := s.openSession
+	if open == nil {
+		open = func(cfg vens.ScanConfig) (pageStream, error) {
+			return vens.NewDataChannel(s.host, s.dataPort, s.token).StartScan(cfg)
+		}
+	}
+	stream, err := open(cfg)
+	if err != nil {
+		grant.Finish(ctx, false)
+		return nil, err
+	}
+	// The session outlives the request that started it: eSCL clients fetch
+	// the pages with later requests, and go-mfp passes the context of the
+	// ScanJobs request, which ends before the first page. The scan ends
+	// with Close or a lost grant, not with that context.
+	return &AuthorizedSession{ctx: context.WithoutCancel(ctx), inner: stream, grant: grant}, nil
+}
+
+// AuthorizedSession is a running scan with its grant. Before every page it
+// confirms the grant with ScanSnap Control; if the session ended or expired
+// the scan is stopped (EndScan) and ErrAuthorizationLost returned. Close
+// ends the scan and reports the outcome: success only after the scanner
+// signalled the end of the document.
+type AuthorizedSession struct {
+	ctx      context.Context
+	inner    pageStream
+	grant    authz.Grant
+	mu       sync.Mutex
+	complete bool
+	failed   bool
+	closed   bool
+}
+
+// Grant returns the grant of this scan.
+func (a *AuthorizedSession) Grant() authz.Grant { return a.grant }
+
+// NextPage returns the next page or io.EOF.
+func (a *AuthorizedSession) NextPage() (vens.Page, error) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if a.closed {
+		return vens.Page{}, io.EOF
+	}
+	if err := a.grant.Activity(a.ctx); err != nil {
+		a.failed = true
+		a.closeLocked()
+		slog.Warn("scan stopped: authorization lost", "job", a.grant.JobID(), "err", err)
+		return vens.Page{}, fmt.Errorf("%w: %v", authz.ErrAuthorizationLost, err)
+	}
+	page, err := a.inner.NextPage()
+	switch {
+	case errors.Is(err, io.EOF):
+		a.complete = true
+	case err != nil:
+		a.failed = true
+	}
+	return page, err
+}
+
+// Close ends the scan and releases the reservation (idempotent).
+func (a *AuthorizedSession) Close() error {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	return a.closeLocked()
+}
+
+func (a *AuthorizedSession) closeLocked() error {
+	if a.closed {
+		return nil
+	}
+	a.closed = true
+	err := a.inner.Close()
+	success := a.complete && !a.failed && err == nil
+	if ferr := a.grant.Finish(a.ctx, success); ferr != nil {
+		slog.Warn("reservation release failed", "job", a.grant.JobID(), "err", ferr)
+	}
+	return err
+}
+
+// Scan executes an authorized scan and returns the pages.
+func (s *Scanner) Scan(ctx context.Context, source authz.Source, cfg vens.ScanConfig, onPage func(vens.Page)) ([]vens.Page, error) {
+	session, err := s.StartScan(ctx, source, cfg)
+	if err != nil {
+		return nil, err
+	}
+	defer session.Close()
+
+	var pages []vens.Page
+	for {
+		page, err := session.NextPage()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			slog.Warn("scan error", "err", err, "pages_so_far", len(pages))
+			return pages, err
+		}
+		pages = append(pages, page)
+		if onPage != nil {
+			onPage(page)
+		}
 	}
 	// Filter out empty pages
 	var result []vens.Page
