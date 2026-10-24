@@ -248,6 +248,7 @@ type AuthorizedSession struct {
 	complete bool
 	failed   bool
 	closed   bool
+	closeErr error
 }
 
 // Grant returns the grant of this scan.
@@ -285,14 +286,16 @@ func (a *AuthorizedSession) Close() error {
 
 func (a *AuthorizedSession) closeLocked() error {
 	if a.closed {
-		return nil
+		return a.closeErr
 	}
 	a.closed = true
 	err := a.inner.Close()
 	success := a.complete && !a.failed && err == nil
 	if ferr := a.grant.Finish(a.ctx, success); ferr != nil {
 		slog.Warn("reservation release failed", "job", a.grant.JobID(), "err", ferr)
+		err = errors.Join(err, ferr)
 	}
+	a.closeErr = err
 	return err
 }
 

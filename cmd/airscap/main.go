@@ -174,46 +174,19 @@ func main() {
 		}
 		go func() {
 			defer scanGuard.Release()
-			s := settingsStore.Get()
-			if s.SaveType == "none" || s.SaveType == "" {
-				slog.Info("save type is 'none', ignoring button press")
+			intake := os.Getenv("AIRSCAP_STAGING_DIR")
+			if intake == "" {
+				slog.Warn("private intake not configured: button refused")
 				return
 			}
-			if s.SaveType == "local" && s.SavePath == "" {
-				slog.Warn("save path not configured, ignoring button press")
-				return
-			}
-			if s.SaveType == "ftp" && s.FTPHost == "" {
-				slog.Warn("FTP host not configured, ignoring button press")
-				return
-			}
-			if s.SaveType == "paperless" && s.PaperlessURL == "" {
-				slog.Warn("Paperless-ngx URL not configured, ignoring button press")
-				return
-			}
-			cfg := scanner.SettingsToScanConfig(s)
+			cfg := scanner.SettingsToScanConfig(settingsStore.Get())
 			scanStatus.SetScanning(true)
-			// Pass OCR engine only when enabled for button scan
-			var btnOCR *ndlocr.Engine
-			if ocrEngine != nil && s.OCRForButtonScan {
-				btnOCR = ocrEngine
-			}
-			var pages int
-			var err error
-			switch s.SaveType {
-			case "local":
-				pages, err = scanner.RunSaveJob(sc, cfg, s.Format, s.SavePath, btnOCR)
-				scanStatus.SetResult(err, pages, s.SavePath)
-			case "ftp":
-				pages, err = scanner.RunFTPJob(sc, cfg, s.Format, s, btnOCR)
-				scanStatus.SetResult(err, pages, s.FTPHost)
-			case "paperless":
-				pages, err = scanner.RunPaperlessJob(sc, cfg, s.Format, s, btnOCR)
-				scanStatus.SetResult(err, pages, s.PaperlessURL)
-			}
+			manifest, err := scanner.StageButtonScan(ctx, sc, cfg, intake)
+			scanStatus.SetResult(err, manifest.Pages, "private intake; not released")
 			if err != nil {
-				slog.Error("button scan failed", "err", err)
+				slog.Error("scan intake failed; no document released", "err", err)
 			}
+
 		}()
 	}
 
