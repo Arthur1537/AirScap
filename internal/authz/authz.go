@@ -76,3 +76,8 @@ func (d Deny) Authorize(context.Context, Source) (Grant, error) {
 	}
 	return nil, fmt.Errorf("%w: %s", ErrNotAuthorized, reason)
 }
+
+// IntakeRecorder acknowledges private intake only; it grants no publication.
+type IntakeRecorder interface {
+	RecordIntake(context.Context, map[string]any) error
+}

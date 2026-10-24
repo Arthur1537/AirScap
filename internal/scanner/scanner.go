@@ -214,6 +214,17 @@ func (s *Scanner) StartScan(ctx context.Context, source authz.Source, cfg vens.S
 		slog.Warn("scan refused", "source", source, "err", err)
 		return nil, err
 	}
+	// StartScan on the data channel already feeds the first sheet. Validate
+	// the entire binding BEFORE opening it, not merely before accepting pages.
+	validMode := false
+	switch grant.Mode() {
+	case "letters", "receipts", "books", "photos", "archive":
+		validMode = true
+	}
+	if !artifactID.MatchString(grant.ReservationID()) || !artifactJob.MatchString(grant.JobID()) || grant.Source() != source || !validMode {
+		grant.Finish(ctx, false)
+		return nil, fmt.Errorf("%w: invalid reservation binding", authz.ErrNotAuthorized)
+	}
 	slog.Info("starting scan session", "source", source, "job", grant.JobID(), "mode", grant.Mode(),
 		"colorMode", cfg.ColorMode, "quality", cfg.Quality, "duplex", cfg.Duplex, "paperSize", cfg.PaperSize)
 
@@ -248,6 +259,7 @@ type AuthorizedSession struct {
 	complete bool
 	failed   bool
 	closed   bool
+	closeErr error
 }
 
 // Grant returns the grant of this scan.
@@ -285,14 +297,16 @@ func (a *AuthorizedSession) Close() error {
 
 func (a *AuthorizedSession) closeLocked() error {
 	if a.closed {
-		return nil
+		return a.closeErr
 	}
 	a.closed = true
 	err := a.inner.Close()
 	success := a.complete && !a.failed && err == nil
 	if ferr := a.grant.Finish(a.ctx, success); ferr != nil {
 		slog.Warn("reservation release failed", "job", a.grant.JobID(), "err", ferr)
+		err = errors.Join(err, ferr)
 	}
+	a.closeErr = err
 	return err
 }
 

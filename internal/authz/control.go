@@ -193,3 +193,18 @@ func (g *controlGrant) Finish(ctx context.Context, success bool) error {
 	})
 	return g.finished
 }
+
+func (g *controlGrant) RecordIntake(ctx context.Context, manifest map[string]any) error {
+	body, status, err := g.control.post(ctx, "/internal/v1/scan-receipts", manifest)
+	if err != nil {
+		return err
+	}
+	var ack struct {
+		Status   string `json:"status"`
+		Released *bool  `json:"released"`
+	}
+	if status != http.StatusOK || json.Unmarshal(body, &ack) != nil || ack.Status != "staged_not_released" || ack.Released == nil || *ack.Released {
+		return errors.New("intake acknowledgement unavailable")
+	}
+	return nil
+}

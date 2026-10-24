@@ -158,6 +158,9 @@ func scanWithPartial(sc *Scanner, cfg vens.ScanConfig) ([]vens.Page, error) {
 			nonEmpty = append(nonEmpty, p)
 		}
 	}
+	if err != nil {
+		return nil, err
+	}
 	if err != nil && len(nonEmpty) > 0 {
 		slog.Warn("scan failed partway, saving partial result", "err", err, "pages", len(nonEmpty))
 	}
