@@ -38,6 +38,8 @@ type Scanner struct {
 func New(host string, dataPort, controlPort uint16, identity string) *Scanner {
 	var token [8]byte
 	rand.Read(token[:6])
+	vens.RegisterToken(token)
+	vens.RegisterSecret(identity)
 	slog.Debug("scanner created", "host", host, "dataPort", dataPort, "controlPort", controlPort, "authentication", "configured")
 	return &Scanner{
 		host:        host,
@@ -76,7 +78,7 @@ func (s *Scanner) Connect(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("discovery: %w", err)
 	}
-	slog.Debug("discovery OK", "name", info.Name, "serial", info.Serial, "ip", info.DeviceIP, "dataPort", info.DataPort, "controlPort", info.ControlPort)
+	slog.Debug("discovery OK", "name", info.Name, "serial", vens.RedactSerial(info.Serial), "ip", info.DeviceIP, "dataPort", info.DataPort, "controlPort", info.ControlPort)
 
 	// Update ports from discovery response
 	if info.DataPort != 0 {
@@ -156,6 +158,8 @@ func (s *Scanner) Connect(ctx context.Context) error {
 	s.mu.Lock()
 	s.connected = true
 	s.name = info.Name
+	vens.RegisterSecret(info.Serial)
+	vens.RegisterSecret(vens.PasswordFromSerial(info.Serial))
 	s.serial = info.Serial
 	if devInfo != nil {
 		s.deviceName = devInfo.DeviceName
@@ -163,7 +167,7 @@ func (s *Scanner) Connect(ctx context.Context) error {
 	}
 	s.scanParams = scanParams
 	s.mu.Unlock()
-	slog.Info("connected to scanner", "host", s.host, "name", info.Name, "serial", info.Serial, "deviceName", s.deviceName)
+	slog.Info("connected to scanner", "host", s.host, "name", info.Name, "serial", vens.RedactSerial(info.Serial), "deviceName", s.deviceName)
 	return nil
 }
 
@@ -327,11 +331,13 @@ func (s *Scanner) Name() string {
 	return strings.TrimSpace(s.name)
 }
 
-// Serial returns the scanner's serial number from discovery.
-func (s *Scanner) Serial() string {
+// DisplaySerial returns the serial number from discovery for display
+// (Web UI, eSCL). The part that holds the default password is masked
+// (vens.RedactSerial); the full serial is never handed out.
+func (s *Scanner) DisplaySerial() string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return s.serial
+	return vens.RedactSerial(s.serial)
 }
 
 // DeviceName returns the full device name from TCP GET_SET sub=0x12

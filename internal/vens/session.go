@@ -2,7 +2,6 @@ package vens
 
 import (
 	"encoding/binary"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"log/slog"
@@ -41,7 +40,7 @@ func (s *ControlSession) connect() (net.Conn, error) {
 		conn.Close()
 		return nil, err
 	}
-	slog.Debug("received welcome from control channel", "addr", addr, "bytes", len(welcome), "hex", hex.EncodeToString(welcome))
+	slog.Debug("received welcome from control channel", "addr", addr, "packet", PacketSummary(welcome))
 	return conn, nil
 }
 
@@ -53,7 +52,7 @@ func (s *ControlSession) sendRecv(data []byte) ([]byte, error) {
 	}
 	defer conn.Close()
 
-	slog.Debug("control send", "bytes", len(data), "hex", hex.EncodeToString(data))
+	slog.Debug("control send", "packet", PacketSummary(data))
 	if _, err := conn.Write(data); err != nil {
 		return nil, fmt.Errorf("control send: %w", err)
 	}
@@ -70,7 +69,7 @@ func (s *ControlSession) sendRecv(data []byte) ([]byte, error) {
 	if _, err := io.ReadFull(conn, resp[4:]); err != nil {
 		return nil, fmt.Errorf("control recv body: %w", err)
 	}
-	slog.Debug("control recv", "bytes", len(resp), "hex", hex.EncodeToString(resp))
+	slog.Debug("control recv", "packet", PacketSummary(resp))
 	return resp, nil
 }
 
@@ -84,7 +83,7 @@ func (s *ControlSession) Register(token [8]byte) error {
 	defer conn.Close()
 
 	req := MarshalReleaseRequest(token, 1)
-	slog.Debug("register request", "bytes", len(req), "hex", hex.EncodeToString(req))
+	slog.Debug("register request", "packet", PacketSummary(req))
 	if _, err := conn.Write(req); err != nil {
 		return fmt.Errorf("register send: %w", err)
 	}
@@ -94,7 +93,7 @@ func (s *ControlSession) Register(token [8]byte) error {
 	if _, err := io.ReadFull(conn, ack); err != nil {
 		return fmt.Errorf("register recv: %w", err)
 	}
-	slog.Debug("registration response", "bytes", len(ack), "hex", hex.EncodeToString(ack))
+	slog.Debug("registration response", "packet", PacketSummary(ack))
 	return nil
 }
 
@@ -148,7 +147,7 @@ func (s *ControlSession) Deregister(token [8]byte) error {
 	defer conn.Close()
 
 	req := MarshalReleaseRequest(token, 0)
-	slog.Debug("deregister request", "bytes", len(req), "hex", hex.EncodeToString(req))
+	slog.Debug("deregister request", "packet", PacketSummary(req))
 	if _, err := conn.Write(req); err != nil {
 		return fmt.Errorf("deregister send: %w", err)
 	}
@@ -157,6 +156,6 @@ func (s *ControlSession) Deregister(token [8]byte) error {
 	if _, err := io.ReadFull(conn, ack); err != nil {
 		return fmt.Errorf("deregister recv: %w", err)
 	}
-	slog.Debug("deregistration response", "bytes", len(ack), "hex", hex.EncodeToString(ack))
+	slog.Debug("deregistration response", "packet", PacketSummary(ack))
 	return nil
 }

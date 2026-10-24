@@ -62,6 +62,7 @@ const MESSAGES = {
   ftpHostHelp:      { en: 'hostname:port (default port 21)', ja: 'ホスト名:ポート（ポート省略時は 21）' },
   username:         { en: 'Username',       ja: 'ユーザー名' },
   password:         { en: 'Password',       ja: 'パスワード' },
+  secretStored:     { en: 'Stored (leave empty to keep)', ja: '保存済み（空欄のままで変更なし）' },
   paperlessBaseUrl: { en: 'Paperless-ngx base URL', ja: 'Paperless-ngx のベース URL' },
   apiToken:         { en: 'API Token',      ja: 'API トークン' },
   apiTokenHelp:     { en: 'Get from Settings > API Token', ja: '設定 > API トークン から取得' },

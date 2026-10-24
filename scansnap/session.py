@@ -72,7 +72,7 @@ class ControlSession:
             await writer.drain()
             # Register response is a 16-byte ack, not length-prefixed
             resp = await _read_exact(reader, 16)
-            log.info("Registration response: %d bytes, hex=%s", len(resp), resp.hex())
+            log.info("Registration response: %d bytes", len(resp))
             return resp
         finally:
             writer.close()

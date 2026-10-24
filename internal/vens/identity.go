@@ -27,7 +27,7 @@ func PasswordFromSerial(serial string) string {
 // identity[i] = ord(password[i]) + ord(KEY[i]) + SHIFT
 func ComputeIdentity(password string) (string, error) {
 	if len(password) > len(identityKey) {
-		return "", fmt.Errorf("password too long (max %d chars, got %d)", len(identityKey), len(password))
+		return "", fmt.Errorf("password too long (max %d chars)", len(identityKey))
 	}
 	var b strings.Builder
 	for i, c := range password {

@@ -344,8 +344,9 @@ func TestBuildCapabilities_WithScanParams(t *testing.T) {
 	if caps.MakeAndModel != "FUJITSU ScanSnap iX500" {
 		t.Errorf("MakeAndModel = %q, want %q", caps.MakeAndModel, "FUJITSU ScanSnap iX500")
 	}
-	if caps.SerialNumber != "iX500-TEST" {
-		t.Errorf("SerialNumber = %q, want %q", caps.SerialNumber, "iX500-TEST")
+	// Masked: the default password is the tail of the serial.
+	if caps.SerialNumber != "iX500-****" {
+		t.Errorf("SerialNumber = %q, want %q", caps.SerialNumber, "iX500-****")
 	}
 
 	// Threshold range

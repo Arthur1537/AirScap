@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+
+	"github.com/mzyy94/airscap/internal/vens"
 )
 
 // Settings holds user-configurable scan defaults.
@@ -33,6 +35,43 @@ type Settings struct {
 	OCRForAirscan         bool   `json:"ocrForAirscan"`         // Apply OCR to eSCL PDF output
 }
 
+// PublicSettings is what the Web UI receives: secrets are never sent back,
+// only whether one is stored.
+type PublicSettings struct {
+	Settings
+	FTPPasswordSet    bool `json:"ftpPasswordSet"`
+	PaperlessTokenSet bool `json:"paperlessTokenSet"`
+}
+
+// Public returns the settings without secrets.
+func (s Settings) Public() PublicSettings {
+	p := PublicSettings{
+		Settings:          s,
+		FTPPasswordSet:    s.FTPPassword != "",
+		PaperlessTokenSet: s.PaperlessToken != "",
+	}
+	p.FTPPassword = ""
+	p.PaperlessToken = ""
+	return p
+}
+
+// KeepSecrets returns s with empty secrets taken from current. The Web UI
+// never receives stored secrets, so an empty field means "unchanged".
+func (s Settings) KeepSecrets(current Settings) Settings {
+	if s.FTPPassword == "" {
+		s.FTPPassword = current.FTPPassword
+	}
+	if s.PaperlessToken == "" {
+		s.PaperlessToken = current.PaperlessToken
+	}
+	return s
+}
+
+func registerSecrets(s Settings) {
+	vens.RegisterSecret(s.FTPPassword)
+	vens.RegisterSecret(s.PaperlessToken)
+}
+
 // DefaultSettings returns the default scan settings.
 func DefaultSettings() Settings {
 	return Settings{
@@ -55,7 +94,8 @@ type Store struct {
 // NewStore creates a Store that persists settings to dataDir/settings.json.
 // If the file does not exist or is invalid, default settings are used.
 func NewStore(dataDir string) (*Store, error) {
-	if err := os.MkdirAll(dataDir, 0755); err != nil {
+	// settings.json holds FTP and Paperless credentials: owner only.
+	if err := os.MkdirAll(dataDir, 0700); err != nil {
 		return nil, err
 	}
 	s := &Store{
@@ -82,6 +122,7 @@ func (s *Store) Get() Settings {
 func (s *Store) Update(settings Settings) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	registerSecrets(settings)
 	s.settings = settings
 	return s.save()
 }
@@ -96,6 +137,7 @@ func (s *Store) load() {
 		slog.Warn("invalid settings file, using defaults", "path", s.path, "err", err)
 		return
 	}
+	registerSecrets(settings)
 	s.settings = settings
 }
 
@@ -107,9 +149,23 @@ func (s *Store) save() error {
 	if err != nil {
 		return err
 	}
-	tmp := s.path + ".tmp"
-	if err := os.WriteFile(tmp, append(data, '\n'), 0644); err != nil {
+	// CreateTemp creates the file with mode 0600; a stale temporary file
+	// with wider permissions is never reused.
+	tmp, err := os.CreateTemp(filepath.Dir(s.path), ".settings-*.tmp")
+	if err != nil {
 		return err
 	}
-	return os.Rename(tmp, s.path)
+	defer os.Remove(tmp.Name())
+	if _, err := tmp.Write(append(data, '\n')); err != nil {
+		tmp.Close()
+		return err
+	}
+	if err := tmp.Sync(); err != nil {
+		tmp.Close()
+		return err
+	}
+	if err := tmp.Close(); err != nil {
+		return err
+	}
+	return os.Rename(tmp.Name(), s.path)
 }

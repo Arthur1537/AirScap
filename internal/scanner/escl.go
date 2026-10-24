@@ -129,7 +129,7 @@ func (a *ESCLAdapter) buildCapabilities() *abstract.ScannerCapabilities {
 		name = "Unknown"
 	}
 
-	serial := a.scanner.Serial()
+	serial := a.scanner.DisplaySerial()
 	if serial == "" {
 		serial = a.scanner.Host()
 	}

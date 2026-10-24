@@ -9,6 +9,7 @@ import (
 	"mime/multipart"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -298,7 +299,7 @@ func RunFTPJob(sc *Scanner, cfg vens.ScanConfig, format string, s config.Setting
 func RunPaperlessJob(sc *Scanner, cfg vens.ScanConfig, format string, s config.Settings, ocrEngine *ndlocr.Engine) (int, error) {
 	baseURL := strings.TrimRight(s.PaperlessURL, "/")
 
-	slog.Info("button scan starting (Paperless-ngx)", "format", format, "url", baseURL)
+	slog.Info("button scan starting (Paperless-ngx)", "format", format, "url", redactURL(baseURL))
 	pages, scanErr := scanWithPartial(sc, cfg)
 	if len(pages) == 0 {
 		if scanErr != nil {
@@ -350,6 +351,33 @@ func RunPaperlessJob(sc *Scanner, cfg vens.ScanConfig, format string, s config.S
 	return len(pages), nil
 }
 
+// maxErrorBody bounds the part of a failed upload response kept in the error.
+const maxErrorBody = 256
+
+// errorBody makes a server response safe for errors and logs: bounded,
+// printable only, without the API token (a server could echo it).
+func errorBody(body []byte, token string) string {
+	text := strings.Map(func(r rune) rune {
+		if r < 0x20 || r == 0x7f {
+			return ' '
+		}
+		return r
+	}, string(body))
+	if token != "" {
+		text = strings.ReplaceAll(text, token, vens.Redacted)
+	}
+	return strings.TrimSpace(text)
+}
+
+// redactURL removes user information from a URL for logging.
+func redactURL(raw string) string {
+	u, err := url.Parse(raw)
+	if err != nil {
+		return "<invalid url>"
+	}
+	return u.Redacted()
+}
+
 func uploadToPaperless(baseURL, token, filename string, data []byte) error {
 	var body bytes.Buffer
 	writer := multipart.NewWriter(&body)
@@ -362,8 +390,8 @@ func uploadToPaperless(baseURL, token, filename string, data []byte) error {
 	}
 	writer.Close()
 
-	url := baseURL + "/api/documents/post_document/"
-	req, err := http.NewRequest("POST", url, &body)
+	endpoint := baseURL + "/api/documents/post_document/"
+	req, err := http.NewRequest("POST", endpoint, &body)
 	if err != nil {
 		return fmt.Errorf("create request: %w", err)
 	}
@@ -378,8 +406,8 @@ func uploadToPaperless(baseURL, token, filename string, data []byte) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		respBody, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("HTTP %d: %s", resp.StatusCode, string(respBody))
+		respBody, _ := io.ReadAll(io.LimitReader(resp.Body, maxErrorBody))
+		return fmt.Errorf("HTTP %d: %s", resp.StatusCode, errorBody(respBody, token))
 	}
 	return nil
 }

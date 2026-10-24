@@ -3,7 +3,6 @@ package vens
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -417,9 +416,6 @@ func ParseScanParams(data []byte) (*ScanParams, error) {
 	if len(data) < 68 {
 		return nil, fmt.Errorf("scan params response too short: %d bytes", len(data))
 	}
-	slog.Debug("scan params raw",
-		"hex_40_80", hex.EncodeToString(data[40:min(80, len(data))]),
-	)
 	p := &ScanParams{
 		MaxResolutionX: int(binary.BigEndian.Uint16(data[45:47])),
 		MaxResolutionY: int(binary.BigEndian.Uint16(data[47:49])),

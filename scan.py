@@ -12,6 +12,7 @@ from scansnap.scanner import Scanner
 from scansnap.data import ScanError
 from scansnap.discovery import ScanSnapDiscovery
 from scansnap.packets import ColorMode, PaperSize, Quality, ScanConfig
+from scansnap.redact import install, redact_serial, register_secret
 
 
 async def cmd_discover(args: argparse.Namespace) -> None:
@@ -28,7 +29,7 @@ async def cmd_discover(args: argparse.Namespace) -> None:
 
         print(f"\nFound scanner:")
         print(f"  Name:         {info.name}")
-        print(f"  Serial:       {info.serial}")
+        print(f"  Serial:       {redact_serial(info.serial)}")
         print(f"  IP:           {info.device_ip}")
         print(f"  MAC:          {info.mac}")
         print(f"  Data Port:    {info.data_port}")
@@ -47,10 +48,12 @@ async def cmd_pair(args: argparse.Namespace) -> None:
     password = getattr(args, "password", None)
     identity = getattr(args, "pair_identity", None)
 
+    register_secret(password)
+    register_secret(identity)
     if password:
-        print(f"Pairing with password: {password}")
+        print("Pairing with the given password")
     elif identity:
-        print(f"Pairing with identity: {identity}")
+        print("Pairing with the given identity")
     else:
         print("No password specified — will derive from scanner serial")
 
@@ -64,9 +67,14 @@ async def cmd_pair(args: argparse.Namespace) -> None:
             scanner_ip=args.ip,
             timeout=args.timeout,
         )
-        print(f"Paired!")
-        print(f"\n  Identity: {ident}")
-        print(f"\nUse: python scan.py --ip {scanner.host} --identity {ident} scan")
+        print("Paired!")
+        # The identity is a credential (derived from the password): only on
+        # explicit request, never in logs.
+        if args.show_identity:
+            print(f"\n  Identity: {ident}")
+            print(f"\nUse: python scan.py --ip {scanner.host} --identity <identity> scan")
+        else:
+            print("\nIdentity not shown (use --show-identity to print it once).")
         await scanner.disconnect()
     except ValueError as e:
         print(f"\n{e}", file=sys.stderr)
@@ -153,6 +161,10 @@ def main() -> None:
         "--identity", type=str, dest="pair_identity",
         help="Pre-computed identity string",
     )
+    pair_p.add_argument(
+        "--show-identity", action="store_true",
+        help="Print the computed identity (a credential) after pairing",
+    )
 
     def _add_scan_config_args(p: argparse.ArgumentParser) -> None:
         """Add scan configuration arguments to a subparser."""
@@ -216,6 +228,9 @@ def main() -> None:
         level=logging.DEBUG if args.verbose else logging.INFO,
         format="%(asctime)s %(name)s %(levelname)s %(message)s",
     )
+    for handler in logging.getLogger().handlers:
+        install(handler)
+    register_secret(args.identity)
 
     if args.command == "discover":
         asyncio.run(cmd_discover(args))
