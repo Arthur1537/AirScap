@@ -67,32 +67,16 @@ func TestGetSettingsNeverReturnsSecrets(t *testing.T) {
 	}
 }
 
-func TestPutSettingsKeepsSecretsAndDoesNotEchoThem(t *testing.T) {
+func TestUnauthenticatedSettingsCannotChangeSecretsOrScanConfiguration(t *testing.T) {
 	h, store := settingsHandler(t)
-
-	// The UI sends back what it received: empty secret fields.
-	code, body := do(t, h, http.MethodPut,
-		`{"saveType":"paperless","paperlessUrl":"http://paperless.local:8000","ftpPassword":"","paperlessToken":""}`)
-	if code != http.StatusOK {
+	before := store.Get()
+	code, body := do(t, h, http.MethodPut, `{"saveType":"paperless","paperlessToken":"attacker-chosen"}`)
+	if code != http.StatusForbidden {
 		t.Fatalf("status %d: %s", code, body)
 	}
 	assertNoSecrets(t, body, testFTPPassword, testPaperlessToken)
-	if got := store.Get(); got.FTPPassword != testFTPPassword || got.PaperlessToken != testPaperlessToken {
-		t.Errorf("stored secrets lost: %+v", got)
-	}
-
-	// A new secret replaces the stored one and is not echoed either.
-	const newToken = "paperless-QZ9-rotated"
-	code, body = do(t, h, http.MethodPut,
-		`{"saveType":"paperless","paperlessToken":"`+newToken+`"}`)
-	if code != http.StatusOK {
-		t.Fatalf("status %d: %s", code, body)
-	}
-	assertNoSecrets(t, body, testFTPPassword, newToken)
-	if got := store.Get(); got.PaperlessToken != newToken || got.FTPPassword != testFTPPassword {
-		t.Errorf("rotation failed: %+v", got)
-	}
-	if !strings.Contains(body, `"paperlessTokenSet":true`) {
-		t.Errorf("flag missing: %s", body)
+	after := store.Get()
+	if after.PaperlessToken != before.PaperlessToken || after.SaveType != before.SaveType || after.FTPPassword != before.FTPPassword {
+		t.Fatal("unauthenticated mutation")
 	}
 }

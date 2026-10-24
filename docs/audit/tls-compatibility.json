@@ -1,0 +1,54 @@
+[
+  {
+    "python": "3.11",
+    "umask": "022",
+    "command": [
+      "/tmp/scansnap-python/bin/python",
+      "-m",
+      "unittest",
+      "test_worker_transport",
+      "-v"
+    ],
+    "exit_code": 0,
+    "log": "tls-python3.11-umask022.log"
+  },
+  {
+    "python": "3.11",
+    "umask": "002",
+    "command": [
+      "/tmp/scansnap-python/bin/python",
+      "-m",
+      "unittest",
+      "test_worker_transport",
+      "-v"
+    ],
+    "exit_code": 0,
+    "log": "tls-python3.11-umask002.log"
+  },
+  {
+    "python": "3.13",
+    "umask": "022",
+    "command": [
+      "/tmp/scansnap-python313/bin/python",
+      "-m",
+      "unittest",
+      "test_worker_transport",
+      "-v"
+    ],
+    "exit_code": 0,
+    "log": "tls-python3.13-umask022.log"
+  },
+  {
+    "python": "3.13",
+    "umask": "002",
+    "command": [
+      "/tmp/scansnap-python313/bin/python",
+      "-m",
+      "unittest",
+      "test_worker_transport",
+      "-v"
+    ],
+    "exit_code": 0,
+    "log": "tls-python3.13-umask002.log"
+  }
+]

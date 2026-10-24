@@ -109,7 +109,7 @@ func readResponse(r io.Reader) ([]byte, error) {
 		return nil, fmt.Errorf("read response length: %w", err)
 	}
 	respLen := binary.BigEndian.Uint32(lenBuf)
-	if respLen < 4 {
+	if respLen < 4 || respLen > 16*1024*1024 {
 		return nil, fmt.Errorf("invalid response length: %d", respLen)
 	}
 	resp := make([]byte, respLen)
@@ -361,11 +361,22 @@ func (s *ScanSession) NextPage() (Page, error) {
 			s.done = true
 			return Page{}, fmt.Errorf("wait next sheet recv: %w", err)
 		}
+		if len(resp) < WaitRespStatusOffset+4 || string(resp[4:8]) != "VENS" {
+			s.done = true
+			return Page{}, fmt.Errorf("short terminal wait response")
+		}
 		if len(resp) >= WaitRespStatusOffset+4 {
 			waitStatus := binary.BigEndian.Uint32(resp[WaitRespStatusOffset : WaitRespStatusOffset+4])
 			if waitStatus != 0 {
-				slog.Info("scan complete", "waitStatus", waitStatus)
 				s.done = true
+				if waitStatus != 2 {
+					return Page{}, fmt.Errorf("unknown terminal wait status %d", waitStatus)
+				}
+				// Status 2 is ambiguous (complete OR error). It cannot alone
+				// certify EOF: recheck no-paper and the error/sense response.
+				if err := s.confirmDocumentEnd(); err != nil {
+					return Page{}, err
+				}
 				return Page{}, io.EOF
 			}
 		}
@@ -421,14 +432,13 @@ func (s *ScanSession) Close() error {
 		return nil
 	}
 	s.conn.SetDeadline(time.Now().Add(5 * time.Second))
+	var protocolErr error
 	if _, err := s.conn.Write(MarshalEndScan(s.token)); err != nil {
-		slog.Debug("end scan send failed", "err", err)
+		protocolErr = err
 	} else if _, err := readResponse(s.conn); err != nil {
-		slog.Debug("end scan response failed", "err", err)
-	} else {
-		slog.Debug("end scan session OK")
+		protocolErr = err
 	}
-	err := s.conn.Close()
+	err := errors.Join(protocolErr, s.conn.Close())
 	s.conn = nil
 	s.done = true
 	return err
@@ -610,4 +620,53 @@ func (d *DataChannel) CheckADFStatus() (*ADFStatus, error) {
 	}
 	slog.Debug("ADF status check", "scanStatus", fmt.Sprintf("0x%08X", scanStatus), "paper", result.HasPaper, "jam", result.HasJam, "coverOpen", result.HasCoverOpen, "errorCode", fmt.Sprintf("0x%04X", result.ErrorCode))
 	return result, nil
+}
+
+// confirmDocumentEnd accepts only an explicit no-paper status, no error and a
+// complete normal SCSI sense record. Paper intent still requires human review.
+func (s *ScanSession) confirmDocumentEnd() error {
+	query := func(request []byte) ([]byte, error) {
+		s.conn.SetDeadline(time.Now().Add(5 * time.Second))
+		if _, err := s.conn.Write(request); err != nil {
+			return nil, fmt.Errorf("end confirmation send: %w", err)
+		}
+		response, err := readResponse(s.conn)
+		if err != nil {
+			return nil, fmt.Errorf("end confirmation response: %w", err)
+		}
+		if len(response) < 8 || string(response[4:8]) != "VENS" {
+			return nil, fmt.Errorf("invalid end confirmation header")
+		}
+		return response, nil
+	}
+	status, err := query(MarshalGetStatus(s.token))
+	if err != nil {
+		return err
+	}
+	if len(status) < StatusRespErrorOffset+4 {
+		return fmt.Errorf("short terminal status")
+	}
+	state := binary.BigEndian.Uint32(status[StatusRespScanStatusOffset : StatusRespScanStatusOffset+4])
+	errorField := binary.BigEndian.Uint32(status[StatusRespErrorOffset : StatusRespErrorOffset+4])
+	if state != ADFPaperMask || errorField != 0 {
+		return fmt.Errorf("terminal status is not clean no-paper")
+	}
+	sense, err := query(MarshalGetPageMetadata(s.token))
+	if err != nil {
+		return err
+	}
+	if len(sense) < SenseDataOffset+18 || sense[SenseDataOffset+7] < 10 || len(sense) < SenseDataOffset+8+int(sense[SenseDataOffset+7]) {
+		return fmt.Errorf("short terminal sense")
+	}
+	code := sense[SenseDataOffset] & 0x7f
+	if code != 0x70 && code != 0x71 {
+		return fmt.Errorf("unknown terminal sense format")
+	}
+	if err := parseSenseError(sense); err != nil {
+		return err
+	}
+	if sense[SenseDataOffset+2]&0x0f == SenseKeyNoSense && (sense[SenseDataOffset+12] != 0 || sense[SenseDataOffset+13] != 0) {
+		return fmt.Errorf("ambiguous terminal sense")
+	}
+	return nil
 }

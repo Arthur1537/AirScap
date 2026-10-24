@@ -164,19 +164,7 @@ func (h *handler) handleGetSettings(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) handlePutSettings(w http.ResponseWriter, r *http.Request) {
-	var s config.Settings
-	if err := json.NewDecoder(r.Body).Decode(&s); err != nil {
-		http.Error(w, "invalid request body", http.StatusBadRequest)
-		return
-	}
-	s = s.KeepSecrets(h.settings.Get())
-	if err := h.settings.Update(s); err != nil {
-		slog.Warn("settings save failed", "err", err)
-		http.Error(w, "failed to save settings", http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(s.Public())
+	http.Error(w, "settings changes require authenticated administration", http.StatusForbidden)
 }
 
 // --- Scan Status API ---

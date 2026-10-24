@@ -172,6 +172,12 @@ func (g *controlGrant) Activity(ctx context.Context) error {
 	if status != http.StatusOK {
 		return errors.New(refusal(status, body))
 	}
+	var ack struct {
+		Status string `json:"status"`
+	}
+	if json.Unmarshal(body, &ack) != nil || ack.Status != "recorded" {
+		return errors.New("activity acknowledgement unavailable")
+	}
 	return nil
 }
 
@@ -189,6 +195,17 @@ func (g *controlGrant) Finish(ctx context.Context, success bool) error {
 			g.finished = err
 		case status != http.StatusOK:
 			g.finished = errors.New(refusal(status, body))
+		default:
+			var ack struct {
+				Status string `json:"status"`
+			}
+			expected := "recovery_required"
+			if success {
+				expected = "finished"
+			}
+			if json.Unmarshal(body, &ack) != nil || ack.Status != expected {
+				g.finished = errors.New("finish acknowledgement unavailable")
+			}
 		}
 	})
 	return g.finished

@@ -5,6 +5,9 @@ Wants=network-online.target
 
 [Service]
 Type=simple
+# Provision this dedicated account separately; never silently fall back to root.
+User=airscap
+Group=airscap
 ExecStart=/usr/local/bin/airscap
 EnvironmentFile=/etc/airscap/env
 Restart=on-failure
