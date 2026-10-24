@@ -228,6 +228,11 @@ func (s *Scanner) StartScan(ctx context.Context, source authz.Source, cfg vens.S
 		grant.Finish(ctx, false)
 		return nil, fmt.Errorf("%w: invalid reservation binding", authz.ErrNotAuthorized)
 	}
+	// The job's settings from ScanSnap Control win over local settings; they
+	// are applied before the data channel feeds the first sheet.
+	if settings, ok := grant.(authz.SettingsGrant); ok {
+		cfg = ApplyScanSettings(cfg, settings.ScanSettings())
+	}
 	slog.Info("starting scan session", "source", source, "job", grant.JobID(), "mode", grant.Mode(),
 		"colorMode", cfg.ColorMode, "quality", cfg.Quality, "duplex", cfg.Duplex, "paperSize", cfg.PaperSize)
 
@@ -521,4 +526,32 @@ func (s *Scanner) MakeAndModel() string {
 		return dn
 	}
 	return name
+}
+
+// ApplyScanSettings sets sides, color mode, resolution and bleed-through
+// reduction from a job's settings (authz.ScanSettings, already validated).
+func ApplyScanSettings(cfg vens.ScanConfig, s authz.ScanSettings) vens.ScanConfig {
+	cfg.Duplex = s.Sides == "duplex"
+	switch s.Color {
+	case "color":
+		cfg.ColorMode = vens.ColorColor
+	case "gray":
+		cfg.ColorMode = vens.ColorGray
+	case "bw":
+		cfg.ColorMode = vens.ColorBW
+	default:
+		cfg.ColorMode = vens.ColorAuto
+	}
+	switch s.DPI {
+	case 150:
+		cfg.Quality = vens.QualityNormal
+	case 200:
+		cfg.Quality = vens.QualityFine
+	case 300:
+		cfg.Quality = vens.QualitySuperFine
+	default:
+		cfg.Quality = vens.QualityAuto
+	}
+	cfg.BleedThrough = s.BleedThrough
+	return cfg
 }

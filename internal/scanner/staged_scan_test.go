@@ -227,9 +227,27 @@ func TestCrossRepositorySyntheticIntake(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	sc, _, _, _ := intakeFixture(t)
+	sc, _, _, stream := intakeFixture(t)
+	var opened []vens.ScanConfig
+	sc.openSession = func(cfg vens.ScanConfig) (pageStream, error) {
+		opened = append(opened, cfg)
+		return stream, nil
+	}
 	sc.SetAuthorizer(control)
 	if _, err = StageButtonScan(context.Background(), sc, scanConfig(), os.Getenv("SCANSNAP_CONTRACT_INTAKE")); err != nil {
 		t.Fatal(err)
+	}
+	// The settings chosen in the browser session reach the data channel.
+	if expected := os.Getenv("SCANSNAP_CONTRACT_EXPECT_SCAN"); expected != "" {
+		var want authz.ScanSettings
+		if err := json.Unmarshal([]byte(expected), &want); err != nil || len(opened) != 1 {
+			t.Fatalf("expectation %q, opened %d: %v", expected, len(opened), err)
+		}
+		applied := ApplyScanSettings(scanConfig(), want)
+		got := opened[0]
+		if got.Duplex != applied.Duplex || got.ColorMode != applied.ColorMode ||
+			got.Quality != applied.Quality || got.BleedThrough != applied.BleedThrough || got.BlankPageRemoval {
+			t.Fatalf("data channel config %+v does not match session settings %+v", got, want)
+		}
 	}
 }

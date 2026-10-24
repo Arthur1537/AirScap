@@ -20,13 +20,15 @@ type SimulatedScanner struct {
 	Opened   int
 	Closed   int
 	Served   int
+	Configs  []vens.ScanConfig // configuration of every opened scan
 	nextCall int
 }
 
-func (s *SimulatedScanner) open(vens.ScanConfig) (pageStream, error) {
+func (s *SimulatedScanner) open(cfg vens.ScanConfig) (pageStream, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.Opened++
+	s.Configs = append(s.Configs, cfg)
 	if s.OpenErr != nil {
 		return nil, s.OpenErr
 	}

@@ -37,10 +37,10 @@ func newFakeControl(t *testing.T) (*fakeControl, *httptest.Server) {
 	f := &fakeControl{activity: http.StatusOK, finish: http.StatusOK}
 	f.reserve = func(w http.ResponseWriter, source string) {
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(map[string]string{
+		json.NewEncoder(w).Encode(withScan(map[string]any{
 			"reservation_id": reservationID, "job_id": strings.Repeat("c", 32),
 			"mode": "letters", "source": source, "status": "reserved",
-		})
+		}))
 	}
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
@@ -173,28 +173,28 @@ func TestAuthorizeRefusals(t *testing.T) {
 		"invalid json":    func(w http.ResponseWriter, _ string) { w.WriteHeader(http.StatusCreated); w.Write([]byte("{")) },
 		"status not reserved": func(w http.ResponseWriter, s string) {
 			w.WriteHeader(http.StatusCreated)
-			json.NewEncoder(w).Encode(map[string]string{"reservation_id": reservationID,
-				"job_id": "job", "source": s, "status": "finished"})
+			json.NewEncoder(w).Encode(withScan(map[string]any{"reservation_id": reservationID,
+				"job_id": "job", "source": s, "status": "finished"}))
 		},
 		"other source": func(w http.ResponseWriter, _ string) {
 			w.WriteHeader(http.StatusCreated)
-			json.NewEncoder(w).Encode(map[string]string{"reservation_id": reservationID,
-				"job_id": "job", "source": "escl", "status": "reserved"})
+			json.NewEncoder(w).Encode(withScan(map[string]any{"reservation_id": reservationID,
+				"job_id": "job", "source": "escl", "status": "reserved"}))
 		},
 		"path in reservation id": func(w http.ResponseWriter, s string) {
 			w.WriteHeader(http.StatusCreated)
-			json.NewEncoder(w).Encode(map[string]string{"reservation_id": "../../jobs",
-				"job_id": "job", "source": s, "status": "reserved"})
+			json.NewEncoder(w).Encode(withScan(map[string]any{"reservation_id": "../../jobs",
+				"job_id": "job", "source": s, "status": "reserved"}))
 		},
 		"valid body but not 201": func(w http.ResponseWriter, s string) {
 			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(map[string]string{"reservation_id": reservationID,
-				"job_id": "job", "source": s, "status": "reserved"})
+			json.NewEncoder(w).Encode(withScan(map[string]any{"reservation_id": reservationID,
+				"job_id": "job", "source": s, "status": "reserved"}))
 		},
 		"missing job": func(w http.ResponseWriter, s string) {
 			w.WriteHeader(http.StatusCreated)
-			json.NewEncoder(w).Encode(map[string]string{"reservation_id": reservationID,
-				"source": s, "status": "reserved"})
+			json.NewEncoder(w).Encode(withScan(map[string]any{"reservation_id": reservationID,
+				"source": s, "status": "reserved"}))
 		},
 	}
 	for name, reserve := range cases {
@@ -218,8 +218,8 @@ func TestUnusableReservationIsReleased(t *testing.T) {
 	f, server := newFakeControl(t)
 	f.reserve = func(w http.ResponseWriter, _ string) {
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(map[string]string{"reservation_id": reservationID,
-			"job_id": "job", "source": "preview", "status": "reserved"})
+		json.NewEncoder(w).Encode(withScan(map[string]any{"reservation_id": reservationID,
+			"job_id": "job", "source": "preview", "status": "reserved"}))
 	}
 	if _, err := newClient(t, server.URL).Authorize(context.Background(), SourceButton); err == nil {
 		t.Fatal("expected refusal")
@@ -339,5 +339,62 @@ func TestNewControlTransportPolicy(t *testing.T) {
 		if _, err := NewControl(url, testToken, nil); err != nil {
 			t.Errorf("%s refused: %v", url, err)
 		}
+	}
+}
+
+var testScan = map[string]any{"sides": "simplex", "color": "gray", "dpi": 200, "bleed_through": true}
+
+// withScan adds the job's scan settings, as ScanSnap Control sends them.
+func withScan(body map[string]any) map[string]any {
+	if _, ok := body["scan"]; !ok {
+		body["scan"] = testScan
+	}
+	return body
+}
+
+func TestGrantCarriesScanSettings(t *testing.T) {
+	_, server := newFakeControl(t)
+	grant, err := newClient(t, server.URL).Authorize(context.Background(), SourceButton)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := ScanSettings{Sides: "simplex", Color: "gray", DPI: 200, BleedThrough: true}
+	if got := grant.(SettingsGrant).ScanSettings(); got != want {
+		t.Fatalf("settings = %+v", got)
+	}
+}
+
+func TestMissingOrInvalidScanSettingsRefuseAndRelease(t *testing.T) {
+	cases := map[string]any{
+		"missing":        nil,
+		"dpi 600":        map[string]any{"sides": "duplex", "color": "auto", "dpi": 600, "bleed_through": false},
+		"dpi as string":  map[string]any{"sides": "duplex", "color": "auto", "dpi": "300", "bleed_through": false},
+		"unknown color":  map[string]any{"sides": "duplex", "color": "mono", "dpi": 300, "bleed_through": false},
+		"unknown sides":  map[string]any{"sides": "both", "color": "auto", "dpi": 300, "bleed_through": false},
+		"bleed not bool": map[string]any{"sides": "duplex", "color": "auto", "dpi": 300, "bleed_through": "yes"},
+		"field missing":  map[string]any{"sides": "duplex", "color": "auto", "dpi": 300},
+		"extra field":    map[string]any{"sides": "duplex", "color": "auto", "dpi": 300, "bleed_through": false, "paper": "a4"},
+		"not an object":  "duplex",
+	}
+	for name, scan := range cases {
+		t.Run(name, func(t *testing.T) {
+			f, server := newFakeControl(t)
+			f.reserve = func(w http.ResponseWriter, source string) {
+				body := map[string]any{"reservation_id": reservationID, "job_id": "job", "mode": "letters",
+					"source": source, "status": "reserved"}
+				if scan != nil {
+					body["scan"] = scan
+				}
+				w.WriteHeader(http.StatusCreated)
+				json.NewEncoder(w).Encode(body)
+			}
+			if _, err := newClient(t, server.URL).Authorize(context.Background(), SourceButton); !errors.Is(err, ErrNotAuthorized) {
+				t.Fatalf("err = %v", err)
+			}
+			paths := f.paths()
+			if len(paths) != 2 || !strings.HasSuffix(paths[1], "/finish") {
+				t.Errorf("reservation not released: %v", paths)
+			}
+		})
 	}
 }

@@ -255,15 +255,22 @@ func main() {
 	// Also serve at root for clients that ignore rs (sane-escl)
 	mux.Handle("/", esclServer)
 
-	addr := fmt.Sprintf(":%d", listenPort)
+	addr, advertise, err := httpListen(os.Getenv("AIRSCAP_LISTEN_ADDR"), listenPort)
+	if err != nil {
+		slog.Error("listen address refused", "err", err)
+		os.Exit(1)
+	}
 	httpServer := &http.Server{
 		Addr:    addr,
 		Handler: logMiddleware(mux),
 	}
 
-	// Start mDNS advertisement
+	// Start mDNS advertisement (only when reachable from the LAN)
 	adminURL := fmt.Sprintf("http://%s:%d/ui/", vens.GetLocalIP(scannerIP), listenPort)
-	mdnsServer, err := zeroconf.Register(
+	if !advertise {
+		slog.Info("eSCL/Web UI on loopback only; no mDNS advertisement", "addr", addr)
+	}
+	mdnsServer, err := registerMDNS(advertise,
 		deviceName,
 		"_uscan._tcp",
 		"local.",
@@ -284,8 +291,10 @@ func main() {
 		slog.Error("mDNS registration failed", "err", err)
 		os.Exit(1)
 	}
-	defer mdnsServer.Shutdown()
-	slog.Info("mDNS registered", "name", deviceName, "service", "_uscan._tcp")
+	if mdnsServer != nil {
+		defer mdnsServer.Shutdown()
+		slog.Info("mDNS registered", "name", deviceName, "service", "_uscan._tcp")
+	}
 
 	// Start HTTP server
 	go func() {
@@ -390,4 +399,12 @@ func logMiddleware(next http.Handler) http.Handler {
 			"duration", time.Since(start).Round(time.Millisecond),
 		)
 	})
+}
+
+// registerMDNS advertises the eSCL service only when advertise is set.
+func registerMDNS(advertise bool, instance, service, domain string, port int, text []string, ifaces []net.Interface) (*zeroconf.Server, error) {
+	if !advertise {
+		return nil, nil
+	}
+	return zeroconf.Register(instance, service, domain, port, text, ifaces)
 }
