@@ -26,7 +26,7 @@ wurden nicht wiederholt. Keine reale Scanneraktion.
 | Go-Crosscompiler, keine Ausführung | `evidence/arm64.json` | AirScap als ARM64 bauen | Exit 0; ELF AArch64 bestätigt. Dynamischer Loader vorhanden; keine QNAP-Laufzeitabnahme daraus ableiten |
 | Identischer geteilter Transportcode | Bytevergleich QNAP/Worker + Assertion im Integrationsrunner | Kein Protokolldrift | bestanden |
 | Dashboard-Script | Node `--check` | Syntax gültig | bestanden; keine echte Browser-/iPad-Sichtprüfung behauptet |
-| Github-API-Zugriff | PR-/CI-/Required-Checks-Abfrage | API-Zugriff, keine Annahme aus Git-Push | **blockiert**: api.github.com nicht in bisheriger Laufzeit-Allowlist; Ergänzung nur als Entwurf gespeichert |
+| GitHub-API-Zugriff | PR-/CI-/Required-Checks-Abfrage | API-Zugriff, keine Annahme aus Git-Push | **PR-/Check-Metadaten jetzt abrufbar**, elf neue Drafts erstellt; ursprüngliche Worker #3/#4 je 16 Checks SUCCESS, QNAP/AirScap leer. Required-Policy wegen Protection-/Plan-403 weiter unbekannt |
 | Zertifikate/Accounts/Volumes auf Zielmaschinen | Echte Dienst-/Cross-UID-/Kapazitäts-/Browserabnahme | Separate Betreiberfreigabe und geeignete Testdaten | **nicht ausgeführt**, ausdrücklich außerhalb dieses Auftrags |
 
 ## Fehler, die der integrierte Test gefunden hat
@@ -54,3 +54,15 @@ Blankseitenentfernung. `capture_duplex=not_attested` bleibt explizit; Benutzer
 muss am Original prüfen. Echte GUI-Bedienung, reale Firmware, Quellnetz gegen
 UDP-Spoofing, neue Laufzeitinstallation, angewendetes D5/Peer-PID-Binding und Parser-
 Ressourcenisolation sind dadurch nicht zusätzlich abgenommen.
+
+## Durch CI zusätzlich begründete Nachprüfung
+
+Die ersten Worker-Matrixläufe scheiterten an Test-Fixtures: Strict-X.509 unter
+Python 3.13 verlangte Authority Key Identifier; umask 002 erzeugte absichtlich
+verbotene gruppenschreibbare Testzertifikate. Die Fehler wurden lokal reproduziert.
+Nur die synthetische PKI erhielt korrekte AKI/SKI/KeyUsage-Erweiterungen und
+explizite 0644-Zertifikats-/0600-Keyrechte. Produktionsprüfung unverändert.
+Sieben TLS-Tests bestehen danach in allen vier Kombinationen Python 3.11/3.13
+und umask 022/002; Befehle und Ergebnisse: evidence/tls-compatibility.json.
+Die betroffenen Worker-/Cross-Repo-Vertragstests wurden nach dem Fixturefix
+gezielt erneut ausgeführt, keine erneute reale Systemtestserie.

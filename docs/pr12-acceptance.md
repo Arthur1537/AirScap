@@ -5,9 +5,10 @@
 Die zehn bestehenden Draft-PRs wurden über ihre Git-Head- und Testmerge-Refs
 geprüft. Vollständige Head-/Base-SHAs, Basisbranches und die zwölf Original-
 Befunde stehen im separaten Audit `phase-a.md` / `pr-refs.json` unter
-`/workspace/scansnap-audit`; die PR enthält außerdem `docs/audit/phase-a.md`. Draft-/Open-Status, Reviews, Actions-Läufe und
-Required Checks konnten wegen gesperrter GitHub-API nicht unabhängig bestätigt
-werden. Keine lokalen Testergebnisse werden als GitHub-CI-Ergebnis ausgegeben.
+`/workspace/scansnap-audit`. Nach Wiederverfügbarkeit der PR-API sind alle zehn ursprünglichen Drafts
+als offen/mergbar bestätigt; Worker #3/#4 zeigen je 16 erfolgreiche Checks,
+QNAP/AirScap keine Checks. Branch-Protection/Required-Policy bleibt separat
+mit API-403 unlesbar. Keine lokalen Tests werden als GitHub-CI ausgegeben.
 
 Dieser Feature-Stack enthält Pakete 8–11 und diese Integrationskorrekturen:
 
@@ -104,8 +105,8 @@ zu prüfen. Ein ARM64-Build allein beweist keine QNAP-Ausführbarkeit.
 
 Siehe `PR12-TESTMATRIX.md` (AirScap: `pr12-testmatrix.md`). Rohlogs/Befehle und
 Quellhash-Manifeste liegen in `/workspace/scansnap-audit/evidence`.
-Die PR enthält die Befehle/Ergebnisse in `docs/audit/test-results.json` und
-den getesteten Quellstand in `docs/audit/tested-sources.json`.
+Versionierte Kurzbelege: `docs/audit/phase-a.md`, `test-results.json`,
+`tested-sources.json` und `tls-compatibility.json`.
 Der verpflichtende Cross-Repo-Test liegt im Worker unter
 `integration/test_system_contract.py`; er läuft nur auf expliziten Aufruf,
 nicht als still übersprungene Abnahme. Beispiel aus dem Worker-Checkout:
@@ -132,14 +133,26 @@ anzustoßenden Cross-Repo-Workflow mit expliziten Ref-Eingaben und read-only
 Cross-Repo-Zugang. Eine vorhandene geeignete GitHub-App-/Actions-Bindung ist
 zu verwenden; die Anwesenheit des dort benannten Secrets ist hier unbekannt.
 Der Workflow verweigert bei fehlendem Zugang, statt eine grüne Abnahme durch
-Überspringen vorzutäuschen. Keiner dieser CI-Läufe ist hier als grün bestätigt.
+Überspringen vorzutäuschen. CI-Aussagen sind immer an den abgefragten Head
+gebunden; der Fortschrittsbericht enthält den abschließenden Live-Snapshot.
+
+Erste Worker-CI-Läufe fanden zwei Fixturefehler: fehlende AKI-/SKI-/KeyUsage-
+Erweiterungen für Python 3.13 Strict-X.509 und umaskabhängig gruppenschreibbare
+Testzertifikate. Beide sind lokal reproduziert und ausschließlich in der
+synthetischen Test-PKI korrigiert; Produktionsprüfungen bleiben streng.
+Sieben TLS-Tests bestehen mit Python 3.11/3.13 jeweils unter umask 022/002.
+Der Testfix wurde ohne Rebase/Force-Push separat in die Worker-Stacks
+cherry-gepickt. Die neueren Basis-Heads sind deshalb nicht überall direkte
+Vorfahren; der identische notwendige Fixturefix ist in allen Heads vorhanden.
+Keine Branches wurden gemergt.
 
 ## Verbleibende Abnahme-/Sicherheitsblocker
 
-1. GitHub-API/Required Checks/Draft-Erstellung: api.github.com ist nur als
-   additive Netzwerkänderung im Cloud-Entwurf gespeichert. Betreiber muss in
-   Umgebungseinstellungen prüfen, speichern und veröffentlichen. Danach
-   bestehende API-Authentifizierung erneut testen, erst dann ggf. reparieren.
+1. Alle elf Drafts sind erstellt; PR-/Check-Metadaten sind abrufbar.
+   Branch-Protection-/Required-Policy-Abnahme bleibt wegen API-Rechten/
+   Planbeschränkung offen. Bestehende Anbindung weiterverwenden; kein Token
+   im Chat nötig. Der zuvor gespeicherte additive Netzwerkentwurf ist keine
+   noch bestehende Voraussetzung der erfolgreichen PR-Erstellung.
 2. Parser-Ressourcenisolation vor dem isolierten Renderer bleibt offen (F05).
    Größen-/Objektgrenzen ersetzen keine vollständige Prozess-/UID-Isolation
    und keinen Kapazitätsnachweis für reale Scans. Visuelle Papierabsicht

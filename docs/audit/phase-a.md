@@ -52,3 +52,28 @@ Bereits vorhandene Nachweise aus der vorherigen Arbeit: Paket 5: fünf QNAP-Rece
 Originalquelle: `/workspace/scansnap-review-2026-10-23.md`, SHA-256 `2d31401b2e9a9d17d902ea864ca4ffd402c9eb61aa6e16d380ac1cd8d9a3a69c`. Keine Befund-ID erfunden. Die Bewertungen oben sind aktuelle Nachprüfung, nicht nachträgliche Änderungen des Originals.
 
 Phase A ist in den lokal zugänglichen Teilen abgeschlossen; die CI-/Draft-/Required-Check-Verifikation bleibt konkret durch API-403 blockiert. Phase B–D dürfen unabhängig lokal mit synthetischen Daten fortgesetzt werden. Produktivfreigabe bleibt gesperrt.
+
+## API-Nachprüfung nach Wiederverfügbarkeit (24.10.2026)
+
+Die anfängliche Forbidden-Sperre ist für PR-/Actions-Metadaten entfallen.
+REST bestätigt erneut exakt dieselben zehn Head-/Base-SHAs wie in obiger
+Git-Tabelle; GraphQL bestätigt alle zehn als OPEN, isDraft=true, MERGEABLE /
+CLEAN. Keine Reviews mit Freigabeentscheidung sichtbar. Kein Merge ausgeführt.
+
+| PRs | Bestätigte CI am geprüften Original-Head | Grenze |
+|---|---|---|
+| QNAP #2–#6 | statusCheckRollup leer | keine grünen Checks und kein Beweis einer verpflichtenden CI |
+| AirScap #1–#3 | statusCheckRollup leer | Feature-/PR-Base-Filter erklären die Lücke |
+| Worker #3 | 16 CheckRuns SUCCESS (Push + PR, acht Matrixkombinationen) | keine realen D4/K1-Systemtests daraus ableiten |
+| Worker #4 | 16 CheckRuns SUCCESS (Push + PR, acht Matrixkombinationen) | gleicher Umfang; reale Abnahmen unverändert gesondert |
+
+Rohdaten: phase-a-api-recheck.json und phase-a-rest-recheck.json.
+Branch-Protection-Lesen bleibt mit 'Resource not accessible by integration'
+(403) gesperrt; Branch-Rules meldet für QNAP eine nicht verfügbare Planfunktion
+(403). Ob weitere verbindliche Checks/Policies existieren, wird deshalb nicht
+erfunden. Kein Planupgrade oder Credentialswechsel durchgeführt.
+
+Die folgenden Pakete 8–12 sind jetzt als elf neue Draft-PRs angelegt;
+URLs/Heads und der abschließende CI-Snapshot stehen im Fortschrittsbericht.
+Die Aussagen weiter oben zu fehlender Integration beschreiben bewusst den
+Audit-Ausgangsstand vor den neuen Implementierungen.

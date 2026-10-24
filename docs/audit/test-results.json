@@ -44,8 +44,8 @@
       "-v"
     ],
     "exit_code": 0,
-    "seconds": 6.658,
-    "started_utc": "2026-10-24T11:23:11.222157+00:00",
+    "seconds": 5.8,
+    "started_utc": "2026-10-24T11:36:03.002971+00:00",
     "source_manifest": "worker-sources.json",
     "tests_executed": 43
   },
@@ -74,6 +74,22 @@
       "skip": 1
     }
   },
+  "contract": {
+    "name": "contract",
+    "cwd": "/tmp/scansnap-review/worker",
+    "command": [
+      "/tmp/scansnap-python/bin/python",
+      "-m",
+      "unittest",
+      "test_system_contract",
+      "-v"
+    ],
+    "exit_code": 0,
+    "seconds": 2.327,
+    "started_utc": "2026-10-24T11:36:03.009674+00:00",
+    "source_manifest": "contract-sources.json",
+    "tests_executed": 1
+  },
   "arm64": {
     "name": "arm64",
     "cwd": "/tmp/scansnap-review/airscap",
@@ -90,21 +106,5 @@
     "seconds": 1.96,
     "started_utc": "2026-10-24T11:23:11.189289+00:00",
     "source_manifest": "arm64-sources.json"
-  },
-  "contract": {
-    "name": "contract",
-    "cwd": "/tmp/scansnap-review/worker",
-    "command": [
-      "/tmp/scansnap-python/bin/python",
-      "-m",
-      "unittest",
-      "test_system_contract",
-      "-v"
-    ],
-    "exit_code": 0,
-    "seconds": 3.133,
-    "started_utc": "2026-10-24T11:23:11.213577+00:00",
-    "source_manifest": "contract-sources.json",
-    "tests_executed": 1
   }
 }
