@@ -17,6 +17,7 @@ import (
 	"github.com/OpenPrinting/go-mfp/util/uuid"
 	_ "golang.org/x/image/tiff"
 
+	"github.com/mzyy94/airscap/internal/authz"
 	"github.com/mzyy94/airscap/internal/config"
 	"github.com/mzyy94/airscap/internal/vens"
 	"github.com/mzyy94/airscap/ndlocr"
@@ -188,6 +189,18 @@ func (a *ESCLAdapter) Scan(ctx context.Context, req abstract.ScannerRequest) (ab
 		"compression", cfg.CompressionArg,
 	)
 
+	// Reject incompatible format+colorMode combinations (eSCL spec: 409
+	// Conflict) before the scan starts: StartScan already feeds paper.
+	// TIFF is only valid for BW; JPEG is only valid for color/grayscale.
+	isBW := cfg.ColorMode == vens.ColorBW
+	format := "image/jpeg"
+	if isBW {
+		format = "image/tiff"
+	}
+	if req.DocumentFormat != "" && req.DocumentFormat != "application/pdf" && req.DocumentFormat != format {
+		return nil, fmt.Errorf("%s is not supported with the requested color mode", req.DocumentFormat)
+	}
+
 	a.mu.Lock()
 	a.lastScanErr = nil // Clear previous error on new scan attempt
 	a.scanning = true
@@ -197,7 +210,7 @@ func (a *ESCLAdapter) Scan(ctx context.Context, req abstract.ScannerRequest) (ab
 	a.pagesCompleted = 0
 	a.mu.Unlock()
 
-	session, err := a.scanner.StartScan(cfg)
+	session, err := a.scanner.StartScan(ctx, authz.SourceESCL, cfg)
 	if err != nil {
 		a.mu.Lock()
 		a.scanning = false
@@ -220,26 +233,10 @@ func (a *ESCLAdapter) Scan(ctx context.Context, req abstract.ScannerRequest) (ab
 		res = abstract.Resolution{XResolution: dpi, YResolution: dpi}
 	}
 
-	// BW mode returns TIFF G4 data from the scanner
-	isBW := cfg.ColorMode == vens.ColorBW
-	format := "image/jpeg"
-	if isBW {
-		format = "image/tiff"
-	}
 	// PDF output: collect all pages and generate a single PDF document
 	if req.DocumentFormat == "application/pdf" {
 		ocrEnabled := a.ocrEngine != nil && a.settings != nil && a.settings.Get().OCRForAirscan
 		return &pdfDocument{res: res, session: session, adapter: a, colorMode: cfg.ColorMode, ocrEngine: a.ocrEngine, ocrEnabled: ocrEnabled}, nil
-	}
-
-	// Reject incompatible format+colorMode combinations (eSCL spec: 409 Conflict)
-	// TIFF is only valid for BW; JPEG is only valid for color/grayscale
-	if req.DocumentFormat != "" && req.DocumentFormat != format {
-		session.Close()
-		a.mu.Lock()
-		a.scanning = false
-		a.mu.Unlock()
-		return nil, fmt.Errorf("%s is not supported with the requested color mode", req.DocumentFormat)
 	}
 
 	return &scanDocument{res: res, session: session, format: format, adapter: a, colorMode: cfg.ColorMode}, nil
@@ -471,7 +468,7 @@ func inch1200ToDim(v uint16) abstract.Dimension {
 // Pages are pulled lazily from the scanner one at a time.
 type scanDocument struct {
 	res       abstract.Resolution
-	session   *vens.ScanSession
+	session   *AuthorizedSession
 	format    string // "image/jpeg" or "image/tiff"
 	adapter   *ESCLAdapter
 	colorMode vens.ColorMode // for ActualBytesPerLine calculation
@@ -550,7 +547,7 @@ func (f *scanFile) Format() string { return f.format }
 // generates a PDF in memory, and returns it as a single DocumentFile.
 type pdfDocument struct {
 	res        abstract.Resolution
-	session    *vens.ScanSession
+	session    *AuthorizedSession
 	adapter    *ESCLAdapter
 	colorMode  vens.ColorMode
 	ocrEngine  *ndlocr.Engine

@@ -92,6 +92,15 @@ func main() {
 
 	// Create and connect scanner
 	sc := scanner.New(scannerIP, vens.DefaultDataPort, vens.DefaultControlPort, identity)
+
+	// Every scan (button, eSCL, preview) needs a reservation from ScanSnap
+	// Control; without configuration all scans are refused.
+	authorizer, err := scanAuthorizer(os.Getenv("AIRSCAP_CONTROL_URL"), os.Getenv("AIRSCAP_CONTROL_TOKEN_FILE"))
+	if err != nil {
+		slog.Error("scan authorization misconfigured", "err", err)
+		os.Exit(1)
+	}
+	sc.SetAuthorizer(authorizer)
 	if err := sc.Connect(ctx); err != nil {
 		slog.Warn("initial scanner connection failed, will retry in background", "err", err)
 	}
