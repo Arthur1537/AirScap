@@ -19,6 +19,7 @@ from scansnap.packets import (
     DiscoveryRequest,
     EventNotification,
 )
+from scansnap.redact import redact_serial
 
 log = logging.getLogger(__name__)
 
@@ -74,7 +75,7 @@ class _DiscoveryProtocol(asyncio.DatagramProtocol):
                 info = DeviceInfo.unpack(data)
                 log.info(
                     "Found: %s (%s) at %s  data=%d ctrl=%d",
-                    info.name, info.serial, info.device_ip,
+                    info.name, redact_serial(info.serial), info.device_ip,
                     info.data_port, info.control_port,
                 )
                 if not self._future.done():

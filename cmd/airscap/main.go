@@ -31,7 +31,11 @@ var version = "dev"
 
 func main() {
 	logLevel := parseLogLevel(envStr("AIRSCAP_LOG_LEVEL", "info"))
-	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: logLevel})))
+	// Registered secrets (password, identity, serial, session token) are
+	// replaced in every log record, also at debug level and in errors.
+	slog.SetDefault(slog.New(vens.NewRedactingHandler(
+		slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: logLevel}),
+	)))
 
 	// Parse configuration from environment variables
 	scannerIP := os.Getenv("AIRSCAP_SCANNER_IP")
@@ -50,6 +54,7 @@ func main() {
 		}
 		password = strings.TrimSpace(string(data))
 	}
+	vens.RegisterSecret(password)
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
@@ -65,11 +70,13 @@ func main() {
 		if scannerIP == "" {
 			scannerIP = info.DeviceIP
 		}
-		slog.Info("scanner found", "ip", scannerIP, "name", info.Name, "serial", info.Serial)
+		vens.RegisterSecret(info.Serial)
+		slog.Info("scanner found", "ip", scannerIP, "name", info.Name, "serial", vens.RedactSerial(info.Serial))
 
 		// Derive password from serial if not explicitly set
 		if password == "" {
 			password = vens.PasswordFromSerial(info.Serial)
+			vens.RegisterSecret(password)
 			slog.Info("scanner password derived from serial")
 		}
 	}
@@ -80,6 +87,7 @@ func main() {
 		slog.Error("failed to compute identity", "err", err)
 		os.Exit(1)
 	}
+	vens.RegisterSecret(identity)
 	slog.Info("scanner identity computed")
 
 	// Create and connect scanner

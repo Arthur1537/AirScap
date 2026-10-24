@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 
 from scansnap.packets import CLIENT_NOTIFY_PORT, ColorMode, ScanConfig
+from scansnap.redact import redact_serial, register_secret
 from scansnap.data import DataChannel
 from scansnap.discovery import ScanSnapDiscovery
 from scansnap.session import ControlSession
@@ -42,6 +43,8 @@ class Scanner:
         self.control_port = control_port
         self.token = token or os.urandom(6) + b"\x00\x00"
         self.identity = identity
+        register_secret(self.token)
+        register_secret(identity)
         self._control = ControlSession(host, control_port)
         self._discovery = ScanSnapDiscovery()
         self._local_ip = self._discovery.local_ip
@@ -96,22 +99,30 @@ class Scanner:
             raise ValueError("Provide password or identity, not both")
 
         if password is not None:
+            register_secret(password)
             identity = cls.compute_identity(password)
-            log.info("Computed identity from password: %s", identity)
+            register_secret(identity)
+            log.info("Computed identity from password")
 
         # Step 1: UDP discovery
         discovery = ScanSnapDiscovery()
         token = os.urandom(6) + b"\x00\x00"
+        register_secret(token)
+        register_secret(identity)
         info = await discovery.find_scanner(
             scanner_ip=scanner_ip, token=token, timeout=timeout,
         )
-        log.info("Discovered: %s (%s) at %s", info.name, info.serial, info.device_ip)
+        register_secret(info.serial)
+        log.info("Discovered: %s (%s) at %s",
+                 info.name, redact_serial(info.serial), info.device_ip)
 
         # Auto-derive password from serial if neither password nor identity given
         if identity is None:
             password = cls.password_from_serial(info.serial)
+            register_secret(password)
             identity = cls.compute_identity(password)
-            log.info("Password derived from serial: %s", password)
+            register_secret(identity)
+            log.info("Password derived from serial")
 
         scanner = cls(
             host=info.device_ip,
@@ -145,7 +156,7 @@ class Scanner:
         await scanner._control.register(token)
 
         scanner._connected = True
-        log.info("Pairing complete! identity=%s", identity)
+        log.info("Pairing complete")
 
         return scanner, identity
 
@@ -159,10 +170,13 @@ class Scanner:
         """Discover a scanner and create a Scanner instance."""
         discovery = ScanSnapDiscovery()
         token = os.urandom(6) + b"\x00\x00"
+        register_secret(token)
+        register_secret(identity)
         info = await discovery.find_scanner(
             scanner_ip=scanner_ip, token=token, timeout=timeout,
         )
-        log.info("Discovered: %s (%s)", info.name, info.serial)
+        register_secret(info.serial)
+        log.info("Discovered: %s (%s)", info.name, redact_serial(info.serial))
         scanner = cls(
             host=info.device_ip,
             data_port=info.data_port,
@@ -181,7 +195,8 @@ class Scanner:
         info = await self._discovery.find_scanner(
             scanner_ip=self.host, token=self.token, timeout=10,
         )
-        log.info("Discovery OK: %s (%s)", info.name, info.serial)
+        register_secret(info.serial)
+        log.info("Discovery OK: %s (%s)", info.name, redact_serial(info.serial))
         self._discovered = True
 
     async def _data_request_with_retry(

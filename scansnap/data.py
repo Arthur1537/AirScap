@@ -144,7 +144,7 @@ class DataChannel:
             writer.write(config.pack(self.token))
             await writer.drain()
             resp = await self._read_response(reader)
-            log.debug("Set config response: %d bytes, hex=%s", len(resp), resp.hex())
+            log.debug("Set config response: %d bytes", len(resp))
 
             # Step 2.5: Write tone curve for bleed-through reduction (sub=0xDB)
             if config.bleed_through:

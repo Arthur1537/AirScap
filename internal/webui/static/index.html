@@ -343,6 +343,7 @@
               <label class="label is-small" x-text="t('password')"></label>
               <div class="control">
                 <input class="input" type="password" x-model="scanConfig.ftpPassword"
+                  autocomplete="new-password" :placeholder="scanConfig.ftpPasswordSet ? t('secretStored') : ''"
                   @change="debounceSaveSettings()">
               </div>
             </div>
@@ -360,6 +361,7 @@
               <label class="label is-small" x-text="t('apiToken')"></label>
               <div class="control">
                 <input class="input" type="password" x-model="scanConfig.paperlessToken"
+                  autocomplete="new-password" :placeholder="scanConfig.paperlessTokenSet ? t('secretStored') : ''"
                   @change="debounceSaveSettings()">
               </div>
               <p class="help" x-text="t('apiTokenHelp')"></p>
@@ -608,9 +610,12 @@
               savePath: s.savePath || '',
               ftpHost: s.ftpHost || '',
               ftpUser: s.ftpUser || '',
-              ftpPassword: s.ftpPassword || '',
+              // Secrets are never returned; empty means "keep stored".
+              ftpPassword: '',
+              ftpPasswordSet: s.ftpPasswordSet || false,
               paperlessUrl: s.paperlessUrl || '',
-              paperlessToken: s.paperlessToken || '',
+              paperlessToken: '',
+              paperlessTokenSet: s.paperlessTokenSet || false,
               paperSize: s.paperSize || 'auto',
               airscanForcePaperAuto: s.airscanForcePaperAuto || false,
               airscanBleedThrough: s.airscanBleedThrough || false,
@@ -681,6 +686,9 @@
               body: JSON.stringify(body),
             });
             if (resp.ok) {
+              const saved = await resp.json();
+              this.scanConfig.ftpPasswordSet = saved.ftpPasswordSet || false;
+              this.scanConfig.paperlessTokenSet = saved.paperlessTokenSet || false;
               this.settingsError = false;
               this.settingsSaved = true;
               setTimeout(() => this.settingsSaved = false, 2000);

@@ -91,7 +91,7 @@ func (h *handler) handleStatus(w http.ResponseWriter, r *http.Request) {
 		State:  state,
 		Device: deviceInfo{
 			Name:             h.sc.MakeAndModel(),
-			Serial:           h.sc.Serial(),
+			Serial:           h.sc.DisplaySerial(),
 			Host:             h.sc.Host(),
 			FirmwareRevision: h.sc.FirmwareRevision(),
 			WifiState:        wifiStateString(h.sc.WifiState()),
@@ -158,7 +158,7 @@ func (h *handler) handleStatus(w http.ResponseWriter, r *http.Request) {
 
 func (h *handler) handleGetSettings(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(h.settings.Get())
+	json.NewEncoder(w).Encode(h.settings.Get().Public())
 }
 
 func (h *handler) handlePutSettings(w http.ResponseWriter, r *http.Request) {
@@ -167,13 +167,14 @@ func (h *handler) handlePutSettings(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid request body", http.StatusBadRequest)
 		return
 	}
+	s = s.KeepSecrets(h.settings.Get())
 	if err := h.settings.Update(s); err != nil {
 		slog.Warn("settings save failed", "err", err)
 		http.Error(w, "failed to save settings", http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(s)
+	json.NewEncoder(w).Encode(s.Public())
 }
 
 // --- Scan Status API ---

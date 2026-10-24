@@ -13,7 +13,7 @@ import (
 func NewToken() [8]byte {
 	var token [8]byte
 	rand.Read(token[:6])
-	slog.Debug("generated session token", "token", fmt.Sprintf("%x", token))
+	RegisterToken(token)
 	return token
 }
 
@@ -128,7 +128,7 @@ func FindScanner(ctx context.Context, opts DiscoveryOptions) (*DeviceInfo, error
 
 		slog.Info("found scanner",
 			"name", info.Name,
-			"serial", info.Serial,
+			"serial", RedactSerial(info.Serial),
 			"ip", info.DeviceIP,
 			"data_port", info.DataPort,
 			"control_port", info.ControlPort,

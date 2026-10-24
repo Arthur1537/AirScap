@@ -2,7 +2,6 @@ package vens
 
 import (
 	"encoding/binary"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -78,7 +77,7 @@ func (d *DataChannel) connect() (net.Conn, error) {
 		conn.Close()
 		return nil, err
 	}
-	slog.Debug("data channel connected", "addr", addr, "welcome_hex", hex.EncodeToString(welcome))
+	slog.Debug("data channel connected", "addr", addr, "welcome", PacketSummary(welcome))
 	return conn, nil
 }
 
@@ -221,7 +220,7 @@ func (d *DataChannel) StartScan(cfg ScanConfig) (*ScanSession, error) {
 		conn.Close()
 		return nil, fmt.Errorf("set scan config: %w", err)
 	}
-	slog.Debug("set config response", "bytes", len(resp), "hex", hex.EncodeToString(resp))
+	slog.Debug("set config response", "packet", PacketSummary(resp))
 
 	// Step 2.5: Write tone curve for bleed-through reduction (sub=0xDB)
 	if cfg.BleedThrough {
@@ -250,7 +249,7 @@ func (d *DataChannel) StartScan(cfg ScanConfig) (*ScanSession, error) {
 		conn.Close()
 		return nil, fmt.Errorf("get status: %w", err)
 	}
-	slog.Debug("status response", "bytes", len(resp), "hex", hex.EncodeToString(resp))
+	slog.Debug("status response", "packet", PacketSummary(resp))
 	if len(resp) >= StatusRespScanStatusOffset+4 {
 		scanStatus := binary.BigEndian.Uint32(resp[StatusRespScanStatusOffset : StatusRespScanStatusOffset+4])
 		slog.Info("scan status", "status", fmt.Sprintf("0x%08X", scanStatus))
