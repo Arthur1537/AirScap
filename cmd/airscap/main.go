@@ -190,7 +190,7 @@ func main() {
 		}()
 	}
 
-	btnListener := scanner.NewButtonListener(onButtonPress)
+	btnListener := scanner.NewButtonListener(sc.Host(), onButtonPress)
 	if err := btnListener.Start(ctx); err != nil {
 		slog.Warn("button listener failed to start", "err", err)
 	}

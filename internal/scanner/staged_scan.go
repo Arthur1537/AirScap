@@ -95,6 +95,8 @@ func StageButtonScan(ctx context.Context, sc *Scanner, cfg vens.ScanConfig, inta
 		return m, err
 	}
 	defer root.Close()
+	// Preserve blank sides for human completeness review; never silently drop them.
+	cfg.BlankPageRemoval = false
 	session, err := sc.StartScan(ctx, authz.SourceButton, cfg)
 	if err != nil {
 		return m, err
@@ -120,7 +122,7 @@ func StageButtonScan(ctx context.Context, sc *Scanner, cfg vens.ScanConfig, inta
 			return m, err
 		}
 		p, e := session.NextPage()
-		if errors.Is(e, io.EOF) {
+		if e == io.EOF {
 			break
 		}
 		if e != nil {
@@ -153,7 +155,7 @@ func StageButtonScan(ctx context.Context, sc *Scanner, cfg vens.ScanConfig, inta
 	if dpi == 0 {
 		dpi = 300
 	}
-	pdf, err := GeneratePDF(pages, dpi, cfg.ColorMode == vens.ColorBW)
+	pdf, err := GenerateIntakePDF(pages, dpi)
 	if err != nil {
 		return m, err
 	}

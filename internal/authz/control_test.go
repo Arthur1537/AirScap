@@ -58,10 +58,20 @@ func newFakeControl(t *testing.T) (*fakeControl, *httptest.Server) {
 			f.reserve(w, req["source"])
 		case strings.HasSuffix(r.URL.Path, "/activity"):
 			w.WriteHeader(f.activity)
-			w.Write([]byte(`{"detail":"session expired"}`))
+			if f.activity == http.StatusOK {
+				w.Write([]byte(`{"status":"recorded"}`))
+			} else {
+				w.Write([]byte(`{"detail":"session expired"}`))
+			}
 		case strings.HasSuffix(r.URL.Path, "/finish"):
 			w.WriteHeader(f.finish)
-			w.Write([]byte(`{"status":"finished"}`))
+			var outcome map[string]bool
+			json.Unmarshal(body, &outcome)
+			if outcome["success"] {
+				w.Write([]byte(`{"status":"finished"}`))
+			} else {
+				w.Write([]byte(`{"status":"recovery_required"}`))
+			}
 		default:
 			w.WriteHeader(http.StatusNotFound)
 		}

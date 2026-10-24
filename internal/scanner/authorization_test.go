@@ -3,7 +3,6 @@ package scanner
 import (
 	"context"
 	"errors"
-	"io"
 	"net"
 	"os"
 	"path/filepath"
@@ -143,7 +142,7 @@ func TestLostAuthorizationEndsScanImmediately(t *testing.T) {
 	// lost, not when the client eventually closes it.
 	a := &RecordingAuthorizer{LoseAt: 2}
 	s, sim := newSimulated(a, 5)
-	session, err := s.StartScan(context.Background(), authz.SourceESCL, scanConfig())
+	session, err := s.StartScan(context.Background(), authz.SourceButton, scanConfig())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -161,33 +160,14 @@ func TestLostAuthorizationEndsScanImmediately(t *testing.T) {
 	}
 }
 
-func TestESCLSessionOutlivesScanJobsRequest(t *testing.T) {
-	// go-mfp calls Scan with the context of the POST ScanJobs request and
-	// fetches the pages with later NextDocument requests, after that
-	// context has ended.
+func TestESCLStaysDisabledEvenWithValidGrant(t *testing.T) {
 	a := &RecordingAuthorizer{}
 	s, sim := newSimulated(a, 2)
-	adapter := NewESCLAdapter(s, 8080, nil, nil)
-	ctx, endRequest := context.WithCancel(context.Background())
-	doc, err := adapter.Scan(ctx, abstract.ScannerRequest{
-		Input: abstract.InputADF, ADFMode: abstract.ADFModeSimplex,
-		ColorMode: abstract.ColorModeColor, DocumentFormat: "image/jpeg",
-	})
-	endRequest()
-	if err != nil {
+	if _, err := s.StartScan(context.Background(), authz.SourceESCL, scanConfig()); !errors.Is(err, authz.ErrNotAuthorized) {
 		t.Fatal(err)
 	}
-	for i := 0; i < 2; i++ {
-		if _, err := doc.Next(); err != nil {
-			t.Fatalf("page %d: %v", i+1, err)
-		}
-	}
-	if _, err := doc.Next(); !errors.Is(err, io.EOF) {
-		t.Fatalf("end: %v", err)
-	}
-	doc.Close()
-	if sim.Served != 2 || len(a.Finishes) != 1 || !a.Finishes[0] {
-		t.Errorf("served=%d finishes=%v", sim.Served, a.Finishes)
+	if sim.Opened != 0 || len(a.Sources) != 0 {
+		t.Fatal("HTTP source reached authorization or scanner")
 	}
 }
 
@@ -212,7 +192,7 @@ func TestScannerErrorAndOpenErrorFinishUnsuccessfully(t *testing.T) {
 func TestSessionCloseIsIdempotentAndFinishesOnce(t *testing.T) {
 	a := &RecordingAuthorizer{}
 	s, sim := newSimulated(a, 2)
-	session, err := s.StartScan(context.Background(), authz.SourceESCL, scanConfig())
+	session, err := s.StartScan(context.Background(), authz.SourceButton, scanConfig())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -282,7 +262,7 @@ func TestESCLScanNeedsGrant(t *testing.T) {
 	if _, err := adapter.Scan(context.Background(), req); !errors.Is(err, authz.ErrNotAuthorized) {
 		t.Fatalf("err = %v", err)
 	}
-	if sim.Opened != 0 || len(a.Sources) != 1 || a.Sources[0] != authz.SourceESCL {
+	if sim.Opened != 0 || len(a.Sources) != 0 {
 		t.Errorf("opened=%d sources=%v", sim.Opened, a.Sources)
 	}
 
@@ -291,7 +271,7 @@ func TestESCLScanNeedsGrant(t *testing.T) {
 	if _, err := adapter.Scan(context.Background(), req); err == nil || errors.Is(err, authz.ErrNotAuthorized) {
 		t.Fatalf("err = %v, want format error", err)
 	}
-	if len(a.Sources) != 1 || sim.Opened != 0 {
+	if len(a.Sources) != 0 || sim.Opened != 0 {
 		t.Errorf("format error after reservation: sources=%v opened=%d", a.Sources, sim.Opened)
 	}
 }

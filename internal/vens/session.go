@@ -1,7 +1,6 @@
 package vens
 
 import (
-	"encoding/binary"
 	"fmt"
 	"io"
 	"log/slog"
@@ -57,18 +56,11 @@ func (s *ControlSession) sendRecv(data []byte) ([]byte, error) {
 		return nil, fmt.Errorf("control send: %w", err)
 	}
 
-	// Read response length (first 4 bytes)
-	lenBuf := make([]byte, 4)
-	if _, err := io.ReadFull(conn, lenBuf); err != nil {
-		return nil, fmt.Errorf("control recv length: %w", err)
+	resp, err := readResponse(conn)
+	if err != nil {
+		return nil, fmt.Errorf("control response: %w", err)
 	}
-	respLen := binary.BigEndian.Uint32(lenBuf)
 
-	resp := make([]byte, respLen)
-	copy(resp[:4], lenBuf)
-	if _, err := io.ReadFull(conn, resp[4:]); err != nil {
-		return nil, fmt.Errorf("control recv body: %w", err)
-	}
 	slog.Debug("control recv", "packet", PacketSummary(resp))
 	return resp, nil
 }

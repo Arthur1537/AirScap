@@ -1,0 +1,110 @@
+{
+  "qnap": {
+    "name": "qnap",
+    "cwd": "/tmp/scansnap-review/control",
+    "command": [
+      "/tmp/scansnap-python/bin/python",
+      "-m",
+      "unittest",
+      "test_document_lifecycle",
+      "test_final_publication",
+      "test_controlled_recovery",
+      "test_browser_sessions",
+      "test_scan_receipts",
+      "test_worker_handoff",
+      "tests.test_dashboard",
+      "tests.test_sessions",
+      "test_scanner_gateway",
+      "test_scanner_internal_operations",
+      "test_scanner_internal_integration",
+      "test_container_start",
+      "-v"
+    ],
+    "exit_code": 0,
+    "seconds": 3.254,
+    "started_utc": "2026-10-24T11:23:11.186229+00:00",
+    "source_manifest": "qnap-sources.json",
+    "tests_executed": 75
+  },
+  "worker": {
+    "name": "worker",
+    "cwd": "/tmp/scansnap-review/worker",
+    "command": [
+      "/tmp/scansnap-python/bin/python",
+      "-m",
+      "unittest",
+      "test_scan_handoff",
+      "test_worker_transport",
+      "test_controlled_recovery",
+      "test_result_attestation",
+      "test_publication_completion",
+      "test_pdf_active_content",
+      "test_deploy_artifacts",
+      "test_scansnap_install.D5RuntimeGuardTests",
+      "-v"
+    ],
+    "exit_code": 0,
+    "seconds": 6.658,
+    "started_utc": "2026-10-24T11:23:11.222157+00:00",
+    "source_manifest": "worker-sources.json",
+    "tests_executed": 43
+  },
+  "airscap": {
+    "name": "airscap",
+    "cwd": "/tmp/scansnap-review/airscap",
+    "command": [
+      "/tmp/scansnap-toolchain/go/bin/go",
+      "test",
+      "-json",
+      "-mod=vendor",
+      "-overlay=build/overlay.json",
+      "./internal/scanner",
+      "./internal/authz",
+      "./internal/vens",
+      "./internal/webui",
+      "./cmd/airscap",
+      "-count=1"
+    ],
+    "exit_code": 0,
+    "seconds": 1.713,
+    "started_utc": "2026-10-24T11:23:11.201718+00:00",
+    "source_manifest": "airscap-sources.json",
+    "tests": {
+      "pass": 154,
+      "skip": 1
+    }
+  },
+  "arm64": {
+    "name": "arm64",
+    "cwd": "/tmp/scansnap-review/airscap",
+    "command": [
+      "/tmp/scansnap-toolchain/go/bin/go",
+      "build",
+      "-mod=vendor",
+      "-overlay=build/overlay.json",
+      "-o",
+      "/tmp/scansnap-pr12-airscap-arm64",
+      "./cmd/airscap"
+    ],
+    "exit_code": 0,
+    "seconds": 1.96,
+    "started_utc": "2026-10-24T11:23:11.189289+00:00",
+    "source_manifest": "arm64-sources.json"
+  },
+  "contract": {
+    "name": "contract",
+    "cwd": "/tmp/scansnap-review/worker",
+    "command": [
+      "/tmp/scansnap-python/bin/python",
+      "-m",
+      "unittest",
+      "test_system_contract",
+      "-v"
+    ],
+    "exit_code": 0,
+    "seconds": 3.133,
+    "started_utc": "2026-10-24T11:23:11.213577+00:00",
+    "source_manifest": "contract-sources.json",
+    "tests_executed": 1
+  }
+}

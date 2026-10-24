@@ -27,7 +27,7 @@ packet marshaler anywhere else.
 1. `POST /internal/v1/reservations {"source": "..."}` → `201` with
    `reservation_id`, `job_id`, `mode`, `source`, `status: "reserved"`.
    Anything else refuses the scan (fail closed). A reservation that cannot be
-   used (wrong source, malformed id) is released as failed.
+   used (wrong source, malformed id) is reported as failed and keeps a recovery_required claim.
 2. Before **every** page `POST …/{id}/activity` → `200`. If the session was
    closed or expired, or ScanSnap Control restarted, the scan is ended at once
    (`EndScan`), the call returns `authz.ErrAuthorizationLost` and pages of
@@ -43,12 +43,13 @@ and block further scans until they are resolved (recovery: PR 7).
 
 ## Source policy
 
-ScanSnap Control allows only `button` by default (`SSC_SCAN_SOURCES`).
-**eSCL and preview return the pages to the requesting HTTP client**, and
-AirScap's eSCL server and Web UI have no authentication yet (PR 6): any host
-that reaches AirScap's port could receive the scan of an armed session.
-Enable `escl`/`preview` only after PR 6, or when the port is reachable from
-trusted hosts only.
+Only the physical button is permitted. eSCL and HTTP scan preview are now
+unconditionally refused in Scanner.StartScan, even with a grant. No trusted-LAN
+or environment-variable exception enables unauthenticated HTTP scan paths.
+Button intake preserves blank sides and needs explicit scanner IP/event type;
+UDP bursts are debounced but not cryptographically authenticated. See
+pr12-acceptance.md. A failed/uncertain scan holds recovery_required; it never
+silently frees the scanner for another job.
 
 ## Configuration
 

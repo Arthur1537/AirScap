@@ -48,16 +48,10 @@ func TestPreviewWithoutGrantIsForbidden(t *testing.T) {
 	}
 }
 
-func TestPreviewWithGrantScansAsPreviewSource(t *testing.T) {
+func TestPreviewStaysForbiddenEvenWithGrant(t *testing.T) {
 	a := &scanner.RecordingAuthorizer{}
 	rec, sim := preview(t, a)
-	if rec.Code != http.StatusOK {
-		t.Fatalf("status %d: %s", rec.Code, rec.Body)
-	}
-	if sim.Opened != 1 || len(a.Sources) != 1 || a.Sources[0] != authz.SourcePreview {
-		t.Errorf("opened=%d sources=%v", sim.Opened, a.Sources)
-	}
-	if len(a.Finishes) != 1 || !a.Finishes[0] {
-		t.Errorf("finishes = %v", a.Finishes)
+	if rec.Code != http.StatusForbidden || sim.Opened != 0 || len(a.Sources) != 0 {
+		t.Fatalf("preview bypass: status=%d opened=%d", rec.Code, sim.Opened)
 	}
 }

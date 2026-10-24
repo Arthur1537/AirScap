@@ -206,6 +206,9 @@ func (s *Scanner) currentAuthorizer() authz.Authorizer {
 // StartScan already feeds the first sheet); without one nothing is sent.
 // Pages are pulled one at a time via AuthorizedSession.NextPage.
 func (s *Scanner) StartScan(ctx context.Context, source authz.Source, cfg vens.ScanConfig) (*AuthorizedSession, error) {
+	if source != authz.SourceButton {
+		return nil, fmt.Errorf("%w: HTTP scan sources are disabled", authz.ErrNotAuthorized)
+	}
 	if !s.Online() {
 		return nil, fmt.Errorf("scanner not connected")
 	}
@@ -280,7 +283,7 @@ func (a *AuthorizedSession) NextPage() (vens.Page, error) {
 	}
 	page, err := a.inner.NextPage()
 	switch {
-	case errors.Is(err, io.EOF):
+	case err == io.EOF:
 		a.complete = true
 	case err != nil:
 		a.failed = true
@@ -321,7 +324,7 @@ func (s *Scanner) Scan(ctx context.Context, source authz.Source, cfg vens.ScanCo
 	var pages []vens.Page
 	for {
 		page, err := session.NextPage()
-		if errors.Is(err, io.EOF) {
+		if err == io.EOF {
 			break
 		}
 		if err != nil {

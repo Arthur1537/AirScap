@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/mzyy94/airscap/internal/authz"
 	"github.com/mzyy94/airscap/internal/vens"
 	"image"
@@ -15,20 +16,25 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 )
 
 type artifactStream struct {
-	count     int
-	fail      bool
-	closeFail bool
-	data      []byte
+	count        int
+	fail         bool
+	transportEOF bool
+	closeFail    bool
+	data         []byte
 }
 
 func (s *artifactStream) NextPage() (vens.Page, error) {
 	s.count++
 	if s.count > 3 {
+		if s.transportEOF {
+			return vens.Page{}, fmt.Errorf("transport disconnected: %w", io.EOF)
+		}
 		if s.fail {
 			return vens.Page{}, errors.New("abort after three pages")
 		}
@@ -88,13 +94,15 @@ func TestStagedScanCompleteEnvelope(t *testing.T) {
 	}
 }
 func TestStagedScanNegativeCases(t *testing.T) {
-	for _, kind := range []string{"abort-after-three", "close", "expiry", "cancel", "invalid-image", "unsafe-mode", "finish-db-error", "receipt-db-error"} {
+	for _, kind := range []string{"abort-after-three", "close", "expiry", "cancel", "invalid-image", "unsafe-mode", "finish-db-error", "receipt-db-error", "transport-eof"} {
 		t.Run(kind, func(t *testing.T) {
 			s, a, root, stream := intakeFixture(t)
 			ctx := context.Background()
 			switch kind {
 			case "abort-after-three":
 				stream.fail = true
+			case "transport-eof":
+				stream.transportEOF = true
 			case "close":
 				stream.closeFail = true
 			case "expiry":
@@ -202,5 +210,26 @@ func TestInvalidBindingNeverFeedsFirstSheet(t *testing.T) {
 	_, err := s.StartScan(context.Background(), authz.SourceButton, scanConfig())
 	if !errors.Is(err, authz.ErrNotAuthorized) || sim.Opened != 0 {
 		t.Fatal("invalid binding reached data channel", err, sim.Opened)
+	}
+}
+
+// Explicit opt-in fixture for the cross-repository acceptance runner. It uses
+// the real QNAP adapter but ONLY the simulated page stream, never VENS I/O.
+func TestCrossRepositorySyntheticIntake(t *testing.T) {
+	url := os.Getenv("SCANSNAP_CONTRACT_URL")
+	if url == "" {
+		t.Skip("cross-repository runner not requested")
+	}
+	if !strings.HasPrefix(url, "http://127.0.0.1:") {
+		t.Fatal("test API must be loopback")
+	}
+	control, err := authz.NewControl(url, os.Getenv("SCANSNAP_CONTRACT_TOKEN"), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sc, _, _, _ := intakeFixture(t)
+	sc.SetAuthorizer(control)
+	if _, err = StageButtonScan(context.Background(), sc, scanConfig(), os.Getenv("SCANSNAP_CONTRACT_INTAKE")); err != nil {
+		t.Fatal(err)
 	}
 }
