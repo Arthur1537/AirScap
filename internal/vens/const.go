@@ -89,9 +89,10 @@ const PageTransferLen uint32 = 0x040000 // 256KB per chunk
 
 // Response field offsets.
 const (
-	StatusRespScanStatusOffset = 40 // uint32 at resp[40:44]
-	StatusRespErrorOffset      = 44 // uint32 at resp[44:48], error code in lower 16 bits
-	WaitRespStatusOffset       = 12 // uint32 at resp[12:16]
+	StatusRespScanStatusOffset  = 40 // uint32 at resp[40:44]
+	StatusRespErrorOffset       = 44 // uint32 at resp[44:48], error code in lower 16 bits
+	WaitRespStatusOffset        = 12 // uint32 at resp[12:16]
+	StatusRespDeviceFlagsOffset = 56 // uint32 at resp[56:60] (72-byte response)
 )
 
 // SCSI Sense Data layout within REQUEST SENSE (opcode 0x03) VENS responses.
