@@ -125,6 +125,13 @@ func FindScanner(ctx context.Context, opts DiscoveryOptions) (*DeviceInfo, error
 			slog.Debug("ignored non-device-info packet", "error", err, "bytes", n)
 			continue
 		}
+		// Discovery replies are unauthenticated UDP. With a configured
+		// scanner, only its own reply about itself counts; anything else
+		// could redirect the ports or impersonate the scanner.
+		if !acceptReply(opts.ScannerIP, remoteAddr, info) {
+			slog.Debug("ignored discovery reply from unexpected source", "from", remoteAddr.IP)
+			continue
+		}
 
 		slog.Info("found scanner",
 			"name", info.Name,
@@ -135,4 +142,13 @@ func FindScanner(ctx context.Context, opts DiscoveryOptions) (*DeviceInfo, error
 		)
 		return info, nil
 	}
+}
+
+func acceptReply(scannerIP string, remote *net.UDPAddr, info *DeviceInfo) bool {
+	if scannerIP == "" {
+		return true // broadcast discovery (tools only; airscap requires an IP)
+	}
+	expected := net.ParseIP(scannerIP)
+	return expected != nil && remote != nil && remote.IP.Equal(expected) &&
+		net.ParseIP(info.DeviceIP).Equal(expected)
 }

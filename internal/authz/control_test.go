@@ -109,6 +109,10 @@ func TestNewControlValidatesConfiguration(t *testing.T) {
 		{"http://127.0.0.1", "short"},
 		{"http://127.0.0.1", strings.Repeat("x", 31)},
 		{"http://127.0.0.1", testToken + "\n" + testToken},
+		// Clear text only on loopback (IP literal); a name may resolve elsewhere.
+		{"http://192.168.0.238:18082", testToken},
+		{"http://localhost:18082", testToken},
+		{"http://qnap.local", testToken},
 	} {
 		if _, err := NewControl(tc.url, tc.token, nil); err == nil {
 			t.Errorf("accepted url=%q token len %d", tc.url, len(tc.token))
@@ -326,5 +330,14 @@ func TestRefusalDetailIsScrubbed(t *testing.T) {
 func TestDenyRefuses(t *testing.T) {
 	if _, err := (Deny{}).Authorize(context.Background(), SourceButton); !errors.Is(err, ErrNotAuthorized) {
 		t.Fatal(err)
+	}
+}
+
+func TestNewControlTransportPolicy(t *testing.T) {
+	for _, url := range []string{"http://127.0.0.1:18082", "http://127.8.9.10", "http://[::1]:18082",
+		"https://192.168.0.238:18443", "https://qnap.local"} {
+		if _, err := NewControl(url, testToken, nil); err != nil {
+			t.Errorf("%s refused: %v", url, err)
+		}
 	}
 }

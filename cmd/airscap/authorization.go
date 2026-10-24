@@ -2,9 +2,7 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"log/slog"
-	"os"
 	"strings"
 
 	"github.com/mzyy94/airscap/internal/authz"
@@ -23,16 +21,9 @@ func scanAuthorizer(controlURL, tokenFile string) (authz.Authorizer, error) {
 	if controlURL == "" || tokenFile == "" {
 		return nil, errors.New("AIRSCAP_CONTROL_URL and AIRSCAP_CONTROL_TOKEN_FILE must be set together")
 	}
-	info, err := os.Stat(tokenFile)
+	data, err := readOwnerOnlyFile(tokenFile, "scanner token file")
 	if err != nil {
-		return nil, fmt.Errorf("scanner token file: %w", err)
-	}
-	if !info.Mode().IsRegular() || info.Mode().Perm()&0o077 != 0 {
-		return nil, errors.New("scanner token file must be a regular file accessible by its owner only")
-	}
-	data, err := os.ReadFile(tokenFile)
-	if err != nil {
-		return nil, fmt.Errorf("scanner token file: %w", err)
+		return nil, err
 	}
 	control, err := authz.NewControl(controlURL, strings.TrimSpace(string(data)), nil)
 	if err != nil {

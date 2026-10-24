@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -49,6 +50,12 @@ func NewControl(baseURL, token string, client *http.Client) (*Control, error) {
 	if err != nil || (base.Scheme != "http" && base.Scheme != "https") ||
 		base.Host == "" || base.User != nil || base.RawQuery != "" || base.Fragment != "" {
 		return nil, errors.New("invalid ScanSnap Control URL")
+	}
+	// The bearer token and the reservation ids must not cross the network
+	// in clear text: plain HTTP only to a loopback address (co-located on
+	// the QNAP), otherwise HTTPS with certificate verification.
+	if base.Scheme == "http" && !loopbackLiteral(base.Hostname()) {
+		return nil, errors.New("plain HTTP to ScanSnap Control only on a loopback address; use https")
 	}
 	if len(token) < MinTokenLength || strings.ContainsAny(token, " \t\r\n") {
 		return nil, fmt.Errorf("scanner token must have at least %d characters", MinTokenLength)
@@ -224,4 +231,10 @@ func (g *controlGrant) RecordIntake(ctx context.Context, manifest map[string]any
 		return errors.New("intake acknowledgement unavailable")
 	}
 	return nil
+}
+
+// loopbackLiteral accepts IP literals only: a name could resolve elsewhere.
+func loopbackLiteral(host string) bool {
+	ip := net.ParseIP(host)
+	return ip != nil && ip.IsLoopback()
 }
