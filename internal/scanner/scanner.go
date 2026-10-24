@@ -214,6 +214,17 @@ func (s *Scanner) StartScan(ctx context.Context, source authz.Source, cfg vens.S
 		slog.Warn("scan refused", "source", source, "err", err)
 		return nil, err
 	}
+	// StartScan on the data channel already feeds the first sheet. Validate
+	// the entire binding BEFORE opening it, not merely before accepting pages.
+	validMode := false
+	switch grant.Mode() {
+	case "letters", "receipts", "books", "photos", "archive":
+		validMode = true
+	}
+	if !artifactID.MatchString(grant.ReservationID()) || !artifactJob.MatchString(grant.JobID()) || grant.Source() != source || !validMode {
+		grant.Finish(ctx, false)
+		return nil, fmt.Errorf("%w: invalid reservation binding", authz.ErrNotAuthorized)
+	}
 	slog.Info("starting scan session", "source", source, "job", grant.JobID(), "mode", grant.Mode(),
 		"colorMode", cfg.ColorMode, "quality", cfg.Quality, "duplex", cfg.Duplex, "paperSize", cfg.PaperSize)
 

@@ -187,3 +187,20 @@ func (g errorGrant) Finish(context.Context, bool) error {
 func (g errorGrant) RecordIntake(context.Context, map[string]any) error {
 	return errors.New("receipt database unavailable")
 }
+
+type invalidBinding struct{ *recordingGrant }
+
+func (g invalidBinding) Mode() string { return "" }
+
+type invalidAuthorizer struct{}
+
+func (invalidAuthorizer) Authorize(context.Context, authz.Source) (authz.Grant, error) {
+	return invalidBinding{&recordingGrant{a: &RecordingAuthorizer{}, source: authz.SourceButton}}, nil
+}
+func TestInvalidBindingNeverFeedsFirstSheet(t *testing.T) {
+	s, sim := newSimulated(invalidAuthorizer{}, 3)
+	_, err := s.StartScan(context.Background(), authz.SourceButton, scanConfig())
+	if !errors.Is(err, authz.ErrNotAuthorized) || sim.Opened != 0 {
+		t.Fatal("invalid binding reached data channel", err, sim.Opened)
+	}
+}
