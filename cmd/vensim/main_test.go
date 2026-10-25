@@ -21,6 +21,14 @@ func TestProductionImageBuildsOnlyAirScap(t *testing.T) {
 	if !strings.Contains(text, "./cmd/airscap") || strings.Contains(text, "vensim") || strings.Contains(text, "./...") {
 		t.Fatal("Dockerfile must build ./cmd/airscap only")
 	}
+	// The simulator's own image is test-only and builds nothing else.
+	own, err := os.ReadFile("Dockerfile")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(own), "./cmd/vensim") || strings.Contains(string(own), "./cmd/airscap") {
+		t.Fatal("cmd/vensim/Dockerfile must build ./cmd/vensim only")
+	}
 }
 
 func TestControlAPI(t *testing.T) {
