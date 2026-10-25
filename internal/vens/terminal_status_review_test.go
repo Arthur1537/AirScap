@@ -17,12 +17,14 @@ import (
 	"net"
 	"strings"
 	"testing"
+	"time"
 )
 
 const (
 	opGetStatus    = 0xC2
 	opWaitForScan  = 0xE0
 	opRequestSense = 0x03
+	opEndScan      = 0xD6
 )
 
 // statusReply builds the documented 72-byte GET_STATUS response.
@@ -53,9 +55,15 @@ type fakeScanner struct {
 	terminal     [2]uint32 // after the wait (status 2)
 	pendingError uint32    // error field while the sense is unread; 0 = none
 	sense        []byte
-	waited       bool
-	senseRead    bool
-	seen         []byte
+	// After the terminal status: drop the connection, or read the next
+	// request and never answer it (A5 side-effect tests).
+	dropAfterTerminal bool
+	hangAfterTerminal time.Duration
+	terminalReply     []byte // raw terminal status, if set
+	terminalSent      bool
+	waited            bool
+	senseRead         bool
+	seen              []byte
 }
 
 func (f *fakeScanner) serve(t *testing.T, server net.Conn) {
@@ -80,6 +88,8 @@ func (f *fakeScanner) serve(t *testing.T, server net.Conn) {
 				reply = statusReply(f.before[0], f.before[1])
 			case f.pendingError != 0 && !f.senseRead:
 				reply = statusReply(f.terminal[0], f.pendingError)
+			case f.terminalReply != nil && !f.terminalSent:
+				reply = f.terminalReply
 			default:
 				reply = statusReply(f.terminal[0], f.terminal[1])
 			}
@@ -90,12 +100,24 @@ func (f *fakeScanner) serve(t *testing.T, server net.Conn) {
 		case opRequestSense:
 			f.senseRead = true
 			reply = f.sense
+		case opEndScan:
+			reply = response(40)
 		default:
 			t.Errorf("unexpected opcode 0x%02X", op)
 			return
 		}
+		if f.terminalSent && f.hangAfterTerminal > 0 {
+			time.Sleep(f.hangAfterTerminal)
+			return
+		}
 		if _, err := server.Write(reply); err != nil {
 			return
+		}
+		if op == opGetStatus && f.waited && !f.terminalSent {
+			f.terminalSent = true
+			if f.dropAfterTerminal {
+				return
+			}
 		}
 	}
 }

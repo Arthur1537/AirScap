@@ -624,11 +624,15 @@ func (d *DataChannel) CheckADFStatus() (*ADFStatus, error) {
 	return result, nil
 }
 
+// endConfirmationTimeout bounds each request of confirmDocumentEnd,
+// including the diagnostic requests after a rejection (at most +2x).
+var endConfirmationTimeout = 5 * time.Second
+
 // confirmDocumentEnd accepts only an explicit no-paper status, no error and a
 // complete normal SCSI sense record. Paper intent still requires human review.
 func (s *ScanSession) confirmDocumentEnd() error {
 	query := func(request []byte) ([]byte, error) {
-		s.conn.SetDeadline(time.Now().Add(5 * time.Second))
+		s.conn.SetDeadline(time.Now().Add(endConfirmationTimeout))
 		if _, err := s.conn.Write(request); err != nil {
 			return nil, fmt.Errorf("end confirmation send: %w", err)
 		}
