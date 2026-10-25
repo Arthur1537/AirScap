@@ -1,0 +1,7 @@
+# Reproducible AirScap binaries (Go 1.26.0, CGO_ENABLED=0, -mod=vendor -trimpath -ldflags="-s -w", overlay)
+a78441a linux/amd64 5fea9f1bd382202be8049a7d024516fc444b259dc6cc654917dfd56d54e2e97c (= binary of sandbox image airscap:lan-mvp)
+a78441a linux/arm64 e38718684231e1e57ad13f684b74eb74070fdb97c1bfcff8b95ce66b1efc8e11
+2619438 linux/amd64 7ac14cf02775346c77b94cbfdea1e315e146028e40346f27b29b4eedc766682f (= binary of sandbox image airscap:diag-2619438)
+2619438 linux/arm64 4d5c01bcc02537c5c2daad184e36e446b5044679dd6ef878289e56a10259f091
+# sandbox image airscap:diag-2619438 (amd64): sha256:76ea31ef884c90e579b10e7b6301d4861335c2cb8753e4f6c83d2deed9a54bfa, user 10001:10001
+# smoke test (no network, no config): "scanner configuration refused" err="AIRSCAP_SCANNER_IP must be the scanner's IPv4 address"

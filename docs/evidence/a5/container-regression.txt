@@ -1,0 +1,31 @@
+# A5 container regression, 2026-10-25T03:40:53Z, commit 2619438
+# build file: Ubuntu 24.04 + Go 1.26.0 toolchain from golang:1.26.0-bookworm, libjpeg/libpng
+#17 [stage-1 9/9] RUN go version && go vet ./... && go test -count=1 ./... && go test -count=1 -race ./internal/vens ./internal/scanner ./internal/authz  && go test -count=1 -v -run 'Diagnostic|StatusWords|Review|Terminal|LogPolicy|Redact' ./internal/vens 2>&1 | grep -E '^(=== RUN|--- |ok|FAIL|PASS)'
+go version go1.26.0 linux/amd64
+ok  	github.com/mzyy94/airscap/cmd/airscap	0.021s
+ok  	github.com/mzyy94/airscap/internal/authz	0.029s
+ok  	github.com/mzyy94/airscap/internal/config	0.022s
+ok  	github.com/mzyy94/airscap/internal/scanner	0.122s
+ok  	github.com/mzyy94/airscap/internal/vens	1.465s
+ok  	github.com/mzyy94/airscap/internal/webui	0.004s
+ok  	github.com/mzyy94/airscap/ndlocr	0.004s
+ok  	github.com/mzyy94/airscap/internal/vens	3.379s
+ok  	github.com/mzyy94/airscap/internal/scanner	1.294s
+ok  	github.com/mzyy94/airscap/internal/authz	1.076s
+--- PASS: TestTerminalWaitNeedsCleanStatusAndFullSense (0.00s)
+--- PASS: TestLogPolicy (0.01s)
+--- PASS: TestLogPolicyDetectsLeaks (0.00s)
+--- PASS: TestRedactSerial (0.00s)
+--- PASS: TestRedactingHandlerScrubsRegisteredSecrets (0.00s)
+--- PASS: TestDiagnosticsSendOnlyKnownRequests (0.00s)
+--- PASS: TestDiagnosticsBoundedWhenScannerStopsAnswering (1.00s)
+--- PASS: TestDiagnosticsKeepRejectionAfterConnectionLoss (0.00s)
+--- PASS: TestDiagnosticWordsNeverShowTheSessionToken (0.00s)
+--- PASS: TestStatusWordsAreNamedFields (0.00s)
+--- PASS: TestReviewTerminalStatusReproduction (0.00s)
+--- PASS: TestReviewPreWaitCheckPassesForAllHypotheses (0.00s)
+--- PASS: TestReviewTerminalRequestOrder (0.00s)
+--- PASS: TestReviewTerminalDecisionUnchanged (0.14s)
+PASS
+ok  	github.com/mzyy94/airscap/internal/vens	1.160s
+exit 0
