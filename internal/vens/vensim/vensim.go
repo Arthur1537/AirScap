@@ -55,6 +55,7 @@ type Profile struct {
 	Terminal    Terminal // end-of-document behaviour; "" = H0
 	ChunkSize   int      // bytes per page chunk; 0 = what the client asks for
 	PageWidth   int      // JPEG width in pixels; 0 = 320
+	EndDelayMS  int      // delay before answering END SCAN (a window after the last page)
 }
 
 // Config identifies the simulated scanner.
@@ -390,6 +391,9 @@ func (s *Simulator) serveData(conn net.Conn) {
 			reply = st.sense()
 		default: // D8 settings, D4 config, DB tone curve, D5 prepare, D6 end, EB config
 			reply = response(40)
+		}
+		if op == 0xD6 && st.profile.EndDelayMS > 0 {
+			time.Sleep(time.Duration(st.profile.EndDelayMS) * time.Millisecond)
 		}
 		if _, err := conn.Write(reply); err != nil {
 			return
