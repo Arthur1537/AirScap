@@ -135,9 +135,12 @@ func (c *Control) ServerContract() int {
 	return c.serverContract
 }
 
-// negotiate learns the server's contract once. A server without the
-// contract endpoint (404) speaks version 1. A server that requires a newer
-// client refuses every scan (fail closed).
+// negotiate learns the server's contract once per server version. A
+// server without the contract endpoint (404) speaks version 1. A server
+// that requires a newer client refuses every scan (fail closed). When a
+// response announces another version than the one learned (Control was
+// upgraded or rolled back while AirScap kept running), the next scan
+// negotiates again (observe).
 func (c *Control) negotiate(ctx context.Context) error {
 	if c.ServerContract() != 0 {
 		return nil
@@ -238,11 +241,33 @@ func (c *Control) request(ctx context.Context, method, path string, payload any)
 		return nil, 0, errors.New("ScanSnap Control unreachable")
 	}
 	defer resp.Body.Close()
+	c.observe(resp.Header.Get("X-SSC-Contract"))
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 4096))
 	if err != nil {
 		return nil, resp.StatusCode, errors.New("ScanSnap Control response unreadable")
 	}
 	return body, resp.StatusCode, nil
+}
+
+// observe compares the version a response announces (no header: version
+// 1) with the learned one and forgets it on a mismatch. Only the next
+// negotiation decides; the answer at hand is read as before, its outcome
+// does not depend on the version.
+func (c *Control) observe(announced string) {
+	version := 1
+	if announced != "" {
+		version, _ = strconv.Atoi(announced) // unreadable: 0, a mismatch
+	}
+	c.mu.Lock()
+	learned := c.serverContract
+	if learned == 0 || learned == version {
+		c.mu.Unlock()
+		return
+	}
+	c.serverContract = 0
+	c.mu.Unlock()
+	slog.Info("ScanSnap Control announces another contract; renegotiating before the next scan",
+		"learned", learned, "announced", version)
 }
 
 // refusal turns a ScanSnap Control error into a short, printable reason.

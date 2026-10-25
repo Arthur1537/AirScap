@@ -68,10 +68,19 @@ func TestSharedContractFile(t *testing.T) {
 // v2 serves the contract endpoint from the shared file.
 func v2(t *testing.T, f *fakeControl, minClient int) {
 	c, _ := loadContract(t)
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.announce = "2" // Control's middleware: every answer names the version
 	f.contract = func(w http.ResponseWriter) {
-		w.Header().Set("X-SSC-Contract", "2")
 		json.NewEncoder(w).Encode(map[string]any{"name": c.Name, "version": c.Version, "min_client": minClient})
 	}
+}
+
+// v1 turns the fake back into a version-1 server (rollback).
+func v1(f *fakeControl) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.announce, f.contract = "", nil
 }
 
 func scan(t *testing.T, server string) (Grant, *Control, error) {
@@ -191,6 +200,81 @@ func TestUnreadableOrForeignContractRefuses(t *testing.T) {
 				t.Fatalf("contract calls %d", f.contractCalls)
 			}
 		})
+	}
+}
+
+// Version matrix finding: AirScap kept the version it learned while
+// Control was upgraded or rolled back underneath it. A response announcing
+// another version makes the next scan negotiate again.
+func TestControlUpgradeAndRollbackWhileAirScapRuns(t *testing.T) {
+	f, server := newFakeControl(t)
+	grant, control, err := scan(t, server.URL)
+	if err != nil || control.ServerContract() != 1 {
+		t.Fatalf("v1: %v, contract %d", err, control.ServerContract())
+	}
+	grant.Finish(context.Background(), true)
+
+	// Upgrade: the next answer announces 2, the scan after it negotiates.
+	v2(t, f, 1)
+	grant, err = control.Authorize(context.Background(), SourceButton)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if control.ServerContract() != 0 || f.contractCalls != 1 {
+		t.Fatalf("mismatch not noticed: contract %d, %d calls", control.ServerContract(), f.contractCalls)
+	}
+	// The answer at hand is read as before (outcome independent of version).
+	f.finishBody = `{"status":"recovery_required","reason":"browser_authority_lost"}`
+	if err := grant.Finish(context.Background(), true); !errors.Is(err, ErrRecoveryRequired) {
+		t.Fatalf("got %v", err)
+	}
+	f.finishBody = ""
+	if _, err := control.Authorize(context.Background(), SourceButton); err != nil ||
+		control.ServerContract() != 2 || f.contractCalls != 2 {
+		t.Fatalf("after upgrade: %v, contract %d, %d calls", err, control.ServerContract(), f.contractCalls)
+	}
+
+	// Rollback: answers without the header are version 1 again.
+	v1(f)
+	if _, err := control.Authorize(context.Background(), SourceButton); err != nil || control.ServerContract() != 0 {
+		t.Fatalf("rollback not noticed: %v, contract %d", err, control.ServerContract())
+	}
+	if _, err := control.Authorize(context.Background(), SourceButton); err != nil ||
+		control.ServerContract() != 1 || f.contractCalls != 3 {
+		t.Fatalf("after rollback: %v, contract %d, %d calls", err, control.ServerContract(), f.contractCalls)
+	}
+
+	// An upgrade to a server that needs a newer client is refused at the
+	// next scan, without restarting AirScap.
+	v2(t, f, ContractVersion+1)
+	control.Authorize(context.Background(), SourceButton)
+	f.mu.Lock()
+	reservations := len(f.requests)
+	f.mu.Unlock()
+	if _, err := control.Authorize(context.Background(), SourceButton); !errors.Is(err, ErrNotAuthorized) ||
+		!strings.Contains(err.Error(), "requires scanner contract 3") {
+		t.Fatalf("got %v", err)
+	}
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if len(f.requests) != reservations {
+		t.Fatalf("a reservation was requested from a server that refuses this client: %v", f.requests[reservations:])
+	}
+}
+
+func TestUnreadableAnnouncementForgetsTheLearnedVersion(t *testing.T) {
+	f, server := newFakeControl(t)
+	v2(t, f, 1)
+	_, control, err := scan(t, server.URL)
+	if err != nil || control.ServerContract() != 2 {
+		t.Fatalf("%v, contract %d", err, control.ServerContract())
+	}
+	f.mu.Lock()
+	f.announce = "two"
+	f.mu.Unlock()
+	control.Authorize(context.Background(), SourceButton)
+	if control.ServerContract() != 0 {
+		t.Fatalf("contract %d kept after an unreadable announcement", control.ServerContract())
 	}
 }
 

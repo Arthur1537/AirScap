@@ -33,7 +33,10 @@ type fakeControl struct {
 	contractCalls int
 	// finishBody overrides the finish answer (contract-2 outcomes).
 	finishBody string
-	headers    []string // X-SSC-Contract of every request
+	// announce is the X-SSC-Contract header of every answer ("" = none,
+	// a version-1 server).
+	announce string
+	headers  []string // X-SSC-Contract of every request
 }
 
 type recorded struct {
@@ -54,6 +57,9 @@ func newFakeControl(t *testing.T) (*fakeControl, *httptest.Server) {
 		body, _ := io.ReadAll(r.Body)
 		f.mu.Lock()
 		f.headers = append(f.headers, r.Header.Get("X-SSC-Contract"))
+		if f.announce != "" {
+			w.Header().Set("X-SSC-Contract", f.announce)
+		}
 		if r.Method == http.MethodGet && r.URL.Path == "/internal/v1/contract" {
 			f.contractCalls++
 			f.mu.Unlock()
