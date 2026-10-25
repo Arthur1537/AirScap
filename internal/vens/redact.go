@@ -94,11 +94,17 @@ func RegisterSecret(secret string) {
 	secretRegistry.secrets = append(secretRegistry.secrets, secret)
 }
 
-// RegisterToken registers the hex forms of a session token.
+// RegisterToken registers the hex forms of a session token, including each
+// half as a 32-bit word in the form status diagnostics log ("0x%08X").
 func RegisterToken(token [8]byte) {
 	RegisterSecret(hex.EncodeToString(token[:]))
 	RegisterSecret(strings.ToUpper(hex.EncodeToString(token[:])))
 	RegisterSecret(hex.EncodeToString(token[:6]))
+	for _, half := range [][]byte{token[:4], token[4:]} {
+		if v := binary.BigEndian.Uint32(half); v != 0 {
+			RegisterSecret(fmt.Sprintf("0x%08X", v))
+		}
+	}
 }
 
 func registeredSecrets() []string {
