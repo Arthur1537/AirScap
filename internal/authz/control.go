@@ -7,10 +7,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net"
 	"net/http"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -21,17 +23,44 @@ import (
 // Control obtains grants from the internal reservation API of ScanSnap
 // Control (app/scanner_internal.py):
 //
+//	GET  /internal/v1/contract                                        -> 200 (contract 2; 404 = 1)
 //	POST /internal/v1/reservations                  {"source": "..."} -> 201
 //	POST /internal/v1/reservations/{id}/activity                      -> 200
 //	POST /internal/v1/reservations/{id}/finish      {"success": bool} -> 200
 //
-// Every call carries the scanner token (never the browser token). Any
-// answer other than the expected one refuses the scan (fail closed).
+// Every call carries the scanner token (never the browser token) and the
+// contract version (X-SSC-Contract). Any answer other than the expected
+// one refuses the scan (fail closed).
 type Control struct {
 	base   *url.URL
 	token  string
 	client *http.Client
+
+	mu             sync.Mutex
+	serverContract int // 0 until negotiated
 }
+
+// ContractVersion is the scanner-gateway contract this client speaks
+// (ScanSnap Control contracts/scanner-gateway.json, copy in testdata/).
+const ContractVersion = 2
+
+const contractName = "scansnap-scanner-gateway"
+
+// ErrRecoveryRequired: ScanSnap Control did not accept a scan reported as
+// complete (its browser authority or scan window was gone); the
+// reservation stays blocked until an operator resolves it. Contract 2.
+var ErrRecoveryRequired = errors.New("scan not accepted by ScanSnap Control: recovery required")
+
+// RecoveryRequiredError carries Control's reason for ErrRecoveryRequired.
+type RecoveryRequiredError struct{ Reason string }
+
+func (e *RecoveryRequiredError) Error() string {
+	return ErrRecoveryRequired.Error() + " (" + e.Reason + ")"
+}
+
+func (e *RecoveryRequiredError) Unwrap() error { return ErrRecoveryRequired }
+
+var reasonPattern = regexp.MustCompile(`\A[a-z_]{1,40}\z`)
 
 // MinTokenLength matches ScanSnap Control, which refuses shorter tokens.
 const MinTokenLength = 32
@@ -98,10 +127,58 @@ func (r reservation) scanSettings() (ScanSettings, bool) {
 	return s, s.Valid()
 }
 
+// ServerContract is the contract version ScanSnap Control announced (0
+// before the first successful negotiation).
+func (c *Control) ServerContract() int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.serverContract
+}
+
+// negotiate learns the server's contract once. A server without the
+// contract endpoint (404) speaks version 1. A server that requires a newer
+// client refuses every scan (fail closed).
+func (c *Control) negotiate(ctx context.Context) error {
+	if c.ServerContract() != 0 {
+		return nil
+	}
+	body, status, err := c.request(ctx, http.MethodGet, "/internal/v1/contract", nil)
+	version := 1
+	switch {
+	case err != nil:
+		return err
+	case status == http.StatusNotFound || status == http.StatusMethodNotAllowed:
+	case status == http.StatusOK:
+		var info struct {
+			Name      string `json:"name"`
+			Version   int    `json:"version"`
+			MinClient int    `json:"min_client"`
+		}
+		if json.Unmarshal(body, &info) != nil || info.Name != contractName || info.Version < 2 || info.MinClient < 1 {
+			return errors.New("ScanSnap Control contract unreadable")
+		}
+		if info.MinClient > ContractVersion {
+			return fmt.Errorf("ScanSnap Control requires scanner contract %d or later (this AirScap speaks %d)",
+				info.MinClient, ContractVersion)
+		}
+		version = info.Version
+	default:
+		return errors.New(refusal(status, body))
+	}
+	c.mu.Lock()
+	c.serverContract = version
+	c.mu.Unlock()
+	slog.Info("ScanSnap Control contract", "server", version, "client", ContractVersion)
+	return nil
+}
+
 // Authorize implements Authorizer.
 func (c *Control) Authorize(ctx context.Context, source Source) (Grant, error) {
 	if !source.Valid() {
 		return nil, fmt.Errorf("%w: unknown source", ErrNotAuthorized)
+	}
+	if err := c.negotiate(ctx); err != nil {
+		return nil, fmt.Errorf("%w: %v", ErrNotAuthorized, err)
 	}
 	body, status, err := c.post(ctx, "/internal/v1/reservations",
 		map[string]string{"source": string(source)})
@@ -131,20 +208,31 @@ func (c *Control) Authorize(ctx context.Context, source Source) (Grant, error) {
 }
 
 func (c *Control) post(ctx context.Context, path string, payload any) ([]byte, int, error) {
-	data, err := json.Marshal(payload)
-	if err != nil {
-		return nil, 0, err
+	return c.request(ctx, http.MethodPost, path, payload)
+}
+
+func (c *Control) request(ctx context.Context, method, path string, payload any) ([]byte, int, error) {
+	var data io.Reader
+	if payload != nil {
+		encoded, err := json.Marshal(payload)
+		if err != nil {
+			return nil, 0, err
+		}
+		data = bytes.NewReader(encoded)
 	}
 	endpoint := *c.base
 	endpoint.Path = c.base.Path + path
 	ctx, cancel := context.WithTimeout(ctx, requestTimeout)
 	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint.String(), bytes.NewReader(data))
+	req, err := http.NewRequestWithContext(ctx, method, endpoint.String(), data)
 	if err != nil {
 		return nil, 0, err
 	}
-	req.Header.Set("Content-Type", "application/json")
+	if payload != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
 	req.Header.Set("Authorization", "Bearer "+c.token)
+	req.Header.Set("X-SSC-Contract", strconv.Itoa(ContractVersion))
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, 0, errors.New("ScanSnap Control unreachable")
@@ -226,12 +314,21 @@ func (g *controlGrant) Finish(ctx context.Context, success bool) error {
 		default:
 			var ack struct {
 				Status string `json:"status"`
+				Reason string `json:"reason"`
 			}
-			expected := "recovery_required"
-			if success {
-				expected = "finished"
-			}
-			if json.Unmarshal(body, &ack) != nil || ack.Status != expected {
+			switch {
+			case json.Unmarshal(body, &ack) != nil:
+				g.finished = errors.New("finish acknowledgement unavailable")
+			case success && ack.Status == "finished", !success && ack.Status == "recovery_required":
+			case success && ack.Status == "recovery_required":
+				// Contract 2: the scan is not accepted, the reservation is
+				// blocked for an operator. Nothing may be staged.
+				reason := ack.Reason
+				if !reasonPattern.MatchString(reason) {
+					reason = "unspecified"
+				}
+				g.finished = &RecoveryRequiredError{Reason: reason}
+			default:
 				g.finished = errors.New("finish acknowledgement unavailable")
 			}
 		}
