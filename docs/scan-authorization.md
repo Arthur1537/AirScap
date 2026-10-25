@@ -78,6 +78,31 @@ AIRSCAP_CONTROL_TOKEN_FILE=/etc/airscap/control-token # SSC_SCANNER_TOKEN, >= 32
   iX500 (button, eSCL) is part of the commissioning gates and needs
   separate approval.
 
+## Contract version 2 (A1)
+
+Shared file: ScanSnap Control `contracts/scanner-gateway.json`, byte copy in
+`internal/authz/testdata/`; both repositories pin its SHA-256.
+
+- Before the first scan AirScap asks `GET /internal/v1/contract`. A 404/405
+  means version 1. A foreign or unreadable answer refuses the scan and is
+  not cached. A Control that requires a newer client (`min_client` above
+  2) refuses every scan.
+- Every request sends `X-SSC-Contract: 2`. Every answer of Control names
+  its version; no header means version 1. If that differs from the learned
+  version (Control upgraded or rolled back while AirScap runs), AirScap
+  forgets it and negotiates again before the next scan.
+- `finish(success=true)` answered with `recovery_required` is a typed
+  outcome (`RecoveryRequiredError`, reason from the contract or
+  `unspecified`): nothing is staged, the log says "scan not accepted;
+  reservation blocked for operator recovery". Any other unexpected answer
+  stays "finish acknowledgement unavailable". The outcome never depends on
+  the negotiated version.
+
+Version matrix with the real images against the VENS simulator (both deploy
+orders, rollback, Control restart during a scan): ScanSnap Control
+`tests/matrix/`, evidence `docs/evidence/c2-a1-matrix/` (246/246 checks with
+`5ade21b`; `19f19ea` fails exactly the renegotiation check).
+
 ## Tests
 
 ```sh

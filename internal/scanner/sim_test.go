@@ -64,6 +64,7 @@ type RecordingAuthorizer struct {
 	Sources     []authz.Source
 	Activities  int
 	Finishes    []bool
+	FinishErr   error // returned by every Finish (e.g. contract-2 recovery_required)
 	finishCalls int
 }
 
@@ -110,7 +111,7 @@ func (g *recordingGrant) Finish(_ context.Context, success bool) error {
 		g.done = true
 		g.a.Finishes = append(g.a.Finishes, success)
 	}
-	return nil
+	return g.a.FinishErr
 }
 
 func (a *RecordingAuthorizer) FinishCalls() int {

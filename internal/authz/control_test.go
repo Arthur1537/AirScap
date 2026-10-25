@@ -26,6 +26,17 @@ type fakeControl struct {
 	reserve  func(w http.ResponseWriter, source string)
 	activity int // HTTP status for activity
 	finish   int
+	// contract answers GET /internal/v1/contract; nil is a version-1
+	// server without that endpoint. Contract calls are counted, not
+	// recorded, so request sequences stay those of the scan.
+	contract      func(w http.ResponseWriter)
+	contractCalls int
+	// finishBody overrides the finish answer (contract-2 outcomes).
+	finishBody string
+	// announce is the X-SSC-Contract header of every answer ("" = none,
+	// a version-1 server).
+	announce string
+	headers  []string // X-SSC-Contract of every request
 }
 
 type recorded struct {
@@ -45,6 +56,21 @@ func newFakeControl(t *testing.T) (*fakeControl, *httptest.Server) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
 		f.mu.Lock()
+		f.headers = append(f.headers, r.Header.Get("X-SSC-Contract"))
+		if f.announce != "" {
+			w.Header().Set("X-SSC-Contract", f.announce)
+		}
+		if r.Method == http.MethodGet && r.URL.Path == "/internal/v1/contract" {
+			f.contractCalls++
+			f.mu.Unlock()
+			if f.contract == nil {
+				w.WriteHeader(http.StatusNotFound)
+				w.Write([]byte(`{"detail":"Not Found"}`))
+			} else {
+				f.contract(w)
+			}
+			return
+		}
 		f.requests = append(f.requests, recorded{r.URL.Path, r.Header.Get("Authorization"), string(body)})
 		f.mu.Unlock()
 		if r.Method != http.MethodPost {
@@ -67,7 +93,9 @@ func newFakeControl(t *testing.T) (*fakeControl, *httptest.Server) {
 			w.WriteHeader(f.finish)
 			var outcome map[string]bool
 			json.Unmarshal(body, &outcome)
-			if outcome["success"] {
+			if f.finishBody != "" {
+				w.Write([]byte(f.finishBody))
+			} else if outcome["success"] {
 				w.Write([]byte(`{"status":"finished"}`))
 			} else {
 				w.Write([]byte(`{"status":"recovery_required"}`))

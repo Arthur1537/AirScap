@@ -1,0 +1,120 @@
+{
+  "name": "scansnap-scanner-gateway",
+  "version": 2,
+  "min_client": 1,
+  "transport": "HTTP on 127.0.0.1 only, Authorization: Bearer <scanner token>",
+  "headers": {
+    "response": {
+      "X-SSC-Contract": "contract version of the server, on every answer"
+    },
+    "request": {
+      "X-SSC-Contract": "contract version of the client; missing means 1"
+    }
+  },
+  "endpoints": {
+    "GET /internal/v1/contract": {
+      "200": {
+        "name": "scansnap-scanner-gateway",
+        "version": 2,
+        "min_client": 1
+      },
+      "since": 2
+    },
+    "POST /internal/v1/reservations": {
+      "request": {
+        "source": "button"
+      },
+      "201": [
+        "reservation_id",
+        "job_id",
+        "mode",
+        "source",
+        "status",
+        "scan"
+      ],
+      "409": [
+        "unknown scan source",
+        "scan source not permitted",
+        "scanner busy",
+        "no active session",
+        "browser authority expired or revoked",
+        "browser authority unavailable",
+        "scan settings unavailable",
+        "scanner contract too old"
+      ]
+    },
+    "POST /internal/v1/reservations/{reservation_id}/activity": {
+      "200": {
+        "status": "recorded"
+      },
+      "409": [
+        "invalid reservation",
+        "browser authority expired or revoked",
+        "browser authority unavailable",
+        "session not active",
+        "activity timestamp moved backwards",
+        "session expired"
+      ]
+    },
+    "POST /internal/v1/reservations/{reservation_id}/finish": {
+      "request": {
+        "success": true
+      },
+      "200": [
+        {
+          "status": "finished"
+        },
+        {
+          "status": "recovery_required",
+          "reason": "<recovery reason>"
+        }
+      ],
+      "409": [
+        "invalid reservation"
+      ]
+    },
+    "POST /internal/v1/scan-receipts": {
+      "request": "intake manifest, version 1",
+      "200": {
+        "status": "staged_not_released",
+        "released": false
+      },
+      "409": [
+        "invalid intake manifest",
+        "intake binding unavailable",
+        "conflicting intake receipt"
+      ]
+    }
+  },
+  "errors": {
+    "401": [
+      "Scanner authentication required"
+    ],
+    "422": [
+      "Invalid contract version",
+      "request body validation"
+    ],
+    "503": [
+      "Scanner API disabled",
+      "Scanner credentials unavailable",
+      "Scanner state unavailable"
+    ]
+  },
+  "recovery_reasons": [
+    "browser_authority_lost",
+    "browser_cancelled",
+    "control_restarted",
+    "orphaned",
+    "scan_window_closed",
+    "scanner_reported_failure"
+  ],
+  "history": {
+    "1": "finish(success=true) refused with 409 when the browser authority or the scan window was gone; the reservation stayed reserved until a restart.",
+    "2": "finish answers 200 recovery_required with a reason instead; no contract endpoint before 2; X-SSC-Contract header; reservations without scanner activity for 12 min become recovery_required (orphaned). No release, no deletion."
+  },
+  "compatibility": {
+    "server 2, client 1": "accepted (min_client 1). Unsafe ends become recovery_required instead of hanging; a version-1 client reports the unexpected answer as an error and stages nothing, as before.",
+    "server 1, client 2": "the client finds no contract endpoint (404) and treats the server as version 1: a refused finish stays a refusal; behaviour as before.",
+    "server 2, client 2": "recovery_required is an expected outcome; the client stages nothing and logs the reason."
+  }
+}
