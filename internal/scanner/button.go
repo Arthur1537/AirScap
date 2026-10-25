@@ -2,6 +2,7 @@ package scanner
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
@@ -64,7 +65,9 @@ func (b *ButtonListener) loop(ctx context.Context) {
 
 		n, remote, err := b.conn.ReadFromUDP(buf)
 		if err != nil {
-			if ctx.Err() != nil {
+			// Stop closed the socket: every further read fails at once, so
+			// keep reading only on transient errors.
+			if ctx.Err() != nil || errors.Is(err, net.ErrClosed) {
 				return
 			}
 			slog.Debug("button listener read error", "err", err)
