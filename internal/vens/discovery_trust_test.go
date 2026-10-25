@@ -2,6 +2,7 @@ package vens
 
 import (
 	"encoding/binary"
+	"github.com/mzyy94/airscap/internal/testlock"
 	"net"
 	"strings"
 	"testing"
@@ -23,6 +24,7 @@ func deviceInfoPacket(deviceIP net.IP, dataPort uint16, name string) []byte {
 // (also claiming the scanner's IP); the scanner itself first sends a reply
 // describing another device, then its genuine one, late.
 func TestFindScannerIgnoresForgedReplies(t *testing.T) {
+	testlock.VENSPorts(t) // fixed client port, shared with internal/scanner
 	scanner, err := net.ListenUDP("udp4", &net.UDPAddr{IP: net.IPv4(127, 0, 0, 1), Port: DiscoveryPort})
 	if err != nil {
 		t.Skipf("discovery port %d unavailable: %v", DiscoveryPort, err)

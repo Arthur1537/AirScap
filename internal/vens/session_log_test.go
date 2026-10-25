@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
+	"github.com/mzyy94/airscap/internal/testlock"
 	"io"
 	"net"
 	"strconv"
@@ -172,6 +173,7 @@ func fakeDiscoveryScanner(t *testing.T) {
 }
 
 func TestFindScannerLogsNoSerial(t *testing.T) {
+	testlock.VENSPorts(t) // fixed client port, shared with internal/scanner
 	fakeDiscoveryScanner(t)
 	buf := captureLogs(t)
 
