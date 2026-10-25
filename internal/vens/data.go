@@ -708,27 +708,35 @@ func (e *TerminalStatusError) Error() string {
 	return "terminal status is not clean no-paper: " + strings.Join(reasons, "; ")
 }
 
-// statusFieldAttrs describes a GET_STATUS response field by field. The
-// response carries no session token; only offsets 40.. are reported.
+// statusFieldAttrs describes a GET_STATUS response word by word (offsets
+// 40-71; the header is never logged). No raw packet is logged (redact.go):
+// each 32-bit word is a named field in the form RegisterToken scrubs, so a
+// word equal to half of the session token is redacted by the handler.
 func statusFieldAttrs(phase string, resp []byte) []any {
+	word := func(offset int) (uint32, bool) {
+		if len(resp) < offset+4 {
+			return 0, false
+		}
+		return binary.BigEndian.Uint32(resp[offset : offset+4]), true
+	}
 	attrs := []any{"phase", phase, "bytes", len(resp)}
-	if len(resp) >= StatusRespScanStatusOffset+4 {
-		state := binary.BigEndian.Uint32(resp[StatusRespScanStatusOffset : StatusRespScanStatusOffset+4])
+	if state, ok := word(StatusRespScanStatusOffset); ok {
 		attrs = append(attrs, "state", fmt.Sprintf("0x%08X", state),
 			"no_paper", state&ADFPaperMask != 0, "cover_open", state&ADFCoverOpenMask != 0,
 			"jam", state&ADFJamMask != 0, "unknown_state_bits", fmt.Sprintf("0x%08X", state&^adfKnownMask))
 	}
-	if len(resp) >= StatusRespErrorOffset+4 {
-		field := binary.BigEndian.Uint32(resp[StatusRespErrorOffset : StatusRespErrorOffset+4])
+	if field, ok := word(StatusRespErrorOffset); ok {
 		attrs = append(attrs, "error_field", fmt.Sprintf("0x%08X", field),
 			"error_code", fmt.Sprintf("0x%04X", field&0xFFFF), "error_upper", fmt.Sprintf("0x%04X", field>>16))
 	}
-	if len(resp) >= StatusRespDeviceFlagsOffset+4 {
-		flags := binary.BigEndian.Uint32(resp[StatusRespDeviceFlagsOffset : StatusRespDeviceFlagsOffset+4])
-		attrs = append(attrs, "device_flags", fmt.Sprintf("0x%08X", flags))
-	}
-	if len(resp) > StatusRespScanStatusOffset {
-		attrs = append(attrs, "tail", fmt.Sprintf("%X", resp[StatusRespScanStatusOffset:]))
+	for _, offset := range []int{48, 52, StatusRespDeviceFlagsOffset, 60, 64, 68} {
+		name := fmt.Sprintf("reserved_%d", offset)
+		if offset == StatusRespDeviceFlagsOffset {
+			name = "device_flags"
+		}
+		if v, ok := word(offset); ok {
+			attrs = append(attrs, name, fmt.Sprintf("0x%08X", v))
+		}
 	}
 	return attrs
 }
