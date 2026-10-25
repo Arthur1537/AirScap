@@ -311,7 +311,11 @@ func (a *AuthorizedSession) closeLocked() error {
 	err := a.inner.Close()
 	success := a.complete && !a.failed && err == nil
 	if ferr := a.grant.Finish(a.ctx, success); ferr != nil {
-		slog.Warn("reservation release failed", "job", a.grant.JobID(), "err", ferr)
+		if errors.Is(ferr, authz.ErrRecoveryRequired) {
+			slog.Warn("scan not accepted; reservation blocked for operator recovery", "job", a.grant.JobID(), "err", ferr)
+		} else {
+			slog.Warn("reservation release failed", "job", a.grant.JobID(), "err", ferr)
+		}
 		err = errors.Join(err, ferr)
 	}
 	a.closeErr = err
