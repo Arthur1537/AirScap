@@ -1,31 +1,30 @@
 name: Test
-
 on:
   push:
-    branches: [master, "feature/**"]
+    branches: [master, 'feature/**', 'fix/goal1-emergency-scan']
   pull_request:
-
+permissions:
+  contents: read
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Set up Go
-        uses: actions/setup-go@v6
+      - uses: actions/checkout@v6
         with:
-          go-version: "1.26.0"
-
-      - name: Run tests
-        env:
-          CGO_ENABLED: "0"
+          persist-credentials: false
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.26.0'
+      - name: Prepare dependencies only (no application tests)
+        run: go mod vendor
+      - name: Test and cross-compile inside isolated Go container
         run: |
-          go mod vendor
-          go test -mod=vendor -overlay=build/overlay.json ./...
-
-      - name: Cross-compile for arm64
-        env:
-          CGO_ENABLED: "0"
-          GOARCH: arm64
-        run: go build -mod=vendor -overlay=build/overlay.json ./...
+          docker run --rm --network none --read-only --cap-drop ALL \
+            --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
+            --tmpfs /tmp:rw,exec,size=1g -v "$GITHUB_WORKSPACE:/src:ro" -w /src \
+            -e CGO_ENABLED=0 -e GOCACHE=/tmp/go-cache golang:1.26.0-bookworm sh -ec '
+              go vet -mod=vendor -overlay=build/overlay.json ./internal/authz ./internal/scanner ./internal/vens ./internal/webui ./cmd/airscap
+              go test -mod=vendor -overlay=build/overlay.json ./internal/authz ./internal/scanner ./internal/vens ./internal/webui ./cmd/airscap -count=1
+              GOARCH=arm64 go build -mod=vendor -overlay=build/overlay.json -o /tmp/airscap-arm64 ./cmd/airscap
+            '

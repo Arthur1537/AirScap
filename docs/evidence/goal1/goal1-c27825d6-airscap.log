@@ -1,0 +1,112 @@
+time=2026-10-25T14:21:24.135Z level=INFO msg="scanner identity computed"
+time=2026-10-25T14:21:24.135Z level=INFO msg="scan authorization: ScanSnap Control reservations required"
+time=2026-10-25T14:21:24.135Z level=INFO msg="found scanner" name=iX500-SIM serial=iX500-**** ip=172.31.134.10 data_port=53218 control_port=53219
+time=2026-10-25T14:21:24.437Z level=INFO msg="pairing accepted"
+time=2026-10-25T14:21:24.441Z level=INFO msg="connected to scanner" host=172.31.134.10 name=iX500-SIM serial=iX500-**** deviceName="FUJITSU ScanSnap iX500"
+time=2026-10-25T14:21:24.441Z level=INFO msg="settings store initialized (memory-only, set AIRSCAP_DATA_DIR to persist)"
+time=2026-10-25T14:21:24.441Z level=INFO msg="button listener started" port=55265
+time=2026-10-25T14:21:24.441Z level=INFO msg="eSCL/Web UI on loopback only; no mDNS advertisement" addr=127.0.0.1:18080
+time=2026-10-25T14:21:24.442Z level=INFO msg="eSCL server starting" addr=127.0.0.1:18080 escl=http://172.31.134.20:18080/eSCL ui=http://172.31.134.20:18080/ui/
+time=2026-10-25T14:21:32.448Z level=INFO msg="ScanSnap Control contract" server=2 client=2
+time=2026-10-25T14:21:32.455Z level=INFO msg="starting scan session" source=button job=e1087ee21a0d4c56a726253ea9ba5c70 mode=letters colorMode=1 quality=3 duplex=false paperSize=0
+time=2026-10-25T14:21:32.456Z level=INFO msg="scan status" status=0x00000000
+time=2026-10-25T14:21:32.456Z level=INFO msg="scan started"
+time=2026-10-25T14:21:32.461Z level=INFO msg="page received" sheet=0 side=0 bytes=3060
+time=2026-10-25T14:21:32.464Z level=INFO msg="scan status" status=0x00000000
+time=2026-10-25T14:21:32.464Z level=INFO msg="scan status fields" phase=before_wait bytes=72 state=0x00000000 no_paper=false cover_open=false jam=false unknown_state_bits=0x00000000 error_field=0x00000000 error_code=0x0000 error_upper=0x0000 reserved_48=0x00000000 reserved_52=0x00000000 device_flags=0x00000000 reserved_60=0x00000000 reserved_64=0x00000000 reserved_68=0x00000000
+time=2026-10-25T14:21:32.466Z level=INFO msg="page received" sheet=1 side=0 bytes=3060
+time=2026-10-25T14:21:32.470Z level=INFO msg="scan status" status=0x00000080
+time=2026-10-25T14:21:32.470Z level=INFO msg="scan status fields" phase=before_wait bytes=72 state=0x00000080 no_paper=true cover_open=false jam=false unknown_state_bits=0x00000000 error_field=0x00000000 error_code=0x0000 error_upper=0x0000 reserved_48=0x00000000 reserved_52=0x00000000 device_flags=0x00000000 reserved_60=0x00000000 reserved_64=0x00000000 reserved_68=0x00000000
+time=2026-10-25T14:21:32.470Z level=INFO msg="terminal sense" bytes=58 format=0x70 key=0x00 asc=0x00 ascq=0x00
+time=2026-10-25T14:21:36.449Z level=INFO msg="starting scan session" source=button job=699478c249994db98985d76cb73fbc97 mode=letters colorMode=1 quality=3 duplex=true paperSize=0
+time=2026-10-25T14:21:36.450Z level=INFO msg="scan status" status=0x00000000
+time=2026-10-25T14:21:36.450Z level=INFO msg="scan started"
+time=2026-10-25T14:21:36.453Z level=INFO msg="page received" sheet=0 side=0 bytes=3060
+time=2026-10-25T14:21:36.458Z level=INFO msg="page received" sheet=0 side=1 bytes=3059
+time=2026-10-25T14:21:36.461Z level=INFO msg="scan status" status=0x00000000
+time=2026-10-25T14:21:36.461Z level=INFO msg="scan status fields" phase=before_wait bytes=72 state=0x00000000 no_paper=false cover_open=false jam=false unknown_state_bits=0x00000000 error_field=0x00000000 error_code=0x0000 error_upper=0x0000 reserved_48=0x00000000 reserved_52=0x00000000 device_flags=0x00000000 reserved_60=0x00000000 reserved_64=0x00000000 reserved_68=0x00000000
+time=2026-10-25T14:21:36.463Z level=INFO msg="page received" sheet=1 side=0 bytes=3060
+time=2026-10-25T14:21:36.468Z level=INFO msg="page received" sheet=1 side=1 bytes=3059
+time=2026-10-25T14:21:36.472Z level=INFO msg="scan status" status=0x00000080
+time=2026-10-25T14:21:36.472Z level=INFO msg="scan status fields" phase=before_wait bytes=72 state=0x00000080 no_paper=true cover_open=false jam=false unknown_state_bits=0x00000000 error_field=0x00000000 error_code=0x0000 error_upper=0x0000 reserved_48=0x00000000 reserved_52=0x00000000 device_flags=0x00000000 reserved_60=0x00000000 reserved_64=0x00000000 reserved_68=0x00000000
+time=2026-10-25T14:21:36.472Z level=INFO msg="terminal sense" bytes=58 format=0x70 key=0x03 asc=0x80 ascq=0x03
+time=2026-10-25T14:21:40.143Z level=INFO msg="scanner event received" type=1 data=33554432 remote=172.31.134.10:40644
+time=2026-10-25T14:21:40.147Z level=INFO msg="starting scan session" source=button job=14f70457a2ed4c7284648aa17aae9d42 mode=letters colorMode=1 quality=3 duplex=false paperSize=0
+time=2026-10-25T14:21:40.148Z level=INFO msg="scan status" status=0x00000000
+time=2026-10-25T14:21:40.148Z level=INFO msg="scan started"
+time=2026-10-25T14:21:40.154Z level=INFO msg="page received" sheet=0 side=0 bytes=3060
+time=2026-10-25T14:21:40.159Z level=INFO msg="scan status" status=0x00000080
+time=2026-10-25T14:21:40.159Z level=INFO msg="scan status fields" phase=before_wait bytes=72 state=0x00000080 no_paper=true cover_open=false jam=false unknown_state_bits=0x00000000 error_field=0x00000000 error_code=0x0000 error_upper=0x0000 reserved_48=0x00000000 reserved_52=0x00000000 device_flags=0x00000000 reserved_60=0x00000000 reserved_64=0x00000000 reserved_68=0x00000000
+time=2026-10-25T14:21:40.159Z level=INFO msg="terminal sense" bytes=58 format=0x70 key=0x00 asc=0x00 ascq=0x00
+time=2026-10-25T14:21:44.448Z level=INFO msg="starting scan session" source=button job=3b4389ab6eb64f97b644bdd11069b741 mode=letters colorMode=1 quality=3 duplex=true paperSize=0
+time=2026-10-25T14:21:44.449Z level=INFO msg="scan status" status=0x00000000
+time=2026-10-25T14:21:44.450Z level=INFO msg="scan started"
+time=2026-10-25T14:21:44.453Z level=INFO msg="page received" sheet=0 side=0 bytes=3060
+time=2026-10-25T14:21:44.457Z level=INFO msg="page received" sheet=0 side=1 bytes=3059
+time=2026-10-25T14:21:44.460Z level=INFO msg="scan status" status=0x00000000
+time=2026-10-25T14:21:44.460Z level=INFO msg="scan status fields" phase=before_wait bytes=72 state=0x00000000 no_paper=false cover_open=false jam=false unknown_state_bits=0x00000000 error_field=0x00000000 error_code=0x0000 error_upper=0x0000 reserved_48=0x00000000 reserved_52=0x00000000 device_flags=0x00000000 reserved_60=0x00000000 reserved_64=0x00000000 reserved_68=0x00000000
+time=2026-10-25T14:21:44.461Z level=INFO msg="page received" sheet=1 side=0 bytes=3060
+time=2026-10-25T14:21:44.466Z level=INFO msg="page received" sheet=1 side=1 bytes=3059
+time=2026-10-25T14:21:44.469Z level=INFO msg="scan status" status=0x00000080
+time=2026-10-25T14:21:44.469Z level=INFO msg="scan status fields" phase=before_wait bytes=72 state=0x00000080 no_paper=true cover_open=false jam=false unknown_state_bits=0x00000000 error_field=0x00000000 error_code=0x0000 error_upper=0x0000 reserved_48=0x00000000 reserved_52=0x00000000 device_flags=0x00000000 reserved_60=0x00000000 reserved_64=0x00000000 reserved_68=0x00000000
+time=2026-10-25T14:21:44.469Z level=WARN msg="terminal status rejected" phase=terminal bytes=72 state=0x00000080 no_paper=true cover_open=false jam=false unknown_state_bits=0x00000000 error_field=0x00000003 error_code=0x0003 error_upper=0x0000 reserved_48=0x00000000 reserved_52=0x00000000 device_flags=0x00000000 reserved_60=0x00000000 reserved_64=0x00000000 reserved_68=0x00000000
+time=2026-10-25T14:21:44.469Z level=WARN msg="terminal status rejected: sense" bytes=58 format=0x70 key=0x03 asc=0x80 ascq=0x03
+time=2026-10-25T14:21:44.469Z level=WARN msg="terminal status rejected: status after sense" phase=after_sense bytes=72 state=0x00000080 no_paper=true cover_open=false jam=false unknown_state_bits=0x00000000 error_field=0x00000000 error_code=0x0000 error_upper=0x0000 reserved_48=0x00000000 reserved_52=0x00000000 device_flags=0x00000000 reserved_60=0x00000000 reserved_64=0x00000000 reserved_68=0x00000000
+time=2026-10-25T14:21:44.472Z level=WARN msg="browser scan failed; no document released" reason=terminal_status_rejected err="terminal status is not clean no-paper: error field 0x00000003 (code 0x0003, upper 0x0000)"
+time=2026-10-25T14:21:45.448Z level=INFO msg="starting scan session" source=button job=f22038107abf48379f195721d78eb48b mode=letters colorMode=1 quality=3 duplex=true paperSize=0
+time=2026-10-25T14:21:45.451Z level=INFO msg="scan status" status=0x00000000
+time=2026-10-25T14:21:45.451Z level=INFO msg="scan started"
+time=2026-10-25T14:21:45.457Z level=INFO msg="page received" sheet=0 side=0 bytes=3060
+time=2026-10-25T14:21:45.462Z level=INFO msg="page received" sheet=0 side=1 bytes=3059
+time=2026-10-25T14:21:45.467Z level=INFO msg="scan status" status=0x00000000
+time=2026-10-25T14:21:45.467Z level=INFO msg="scan status fields" phase=before_wait bytes=72 state=0x00000000 no_paper=false cover_open=false jam=false unknown_state_bits=0x00000000 error_field=0x[REDACTED]0000 error_code=0x0000 error_upper=0x[REDACTED] reserved_48=0x00000000 reserved_52=0x00000000 device_flags=0x00000000 reserved_60=0x00000000 reserved_64=0x00000000 reserved_68=0x00000000
+time=2026-10-25T14:21:45.468Z level=INFO msg="page received" sheet=1 side=0 bytes=3060
+time=2026-10-25T14:21:45.472Z level=INFO msg="page received" sheet=1 side=1 bytes=3059
+time=2026-10-25T14:21:45.475Z level=INFO msg="scan status" status=0x00000080
+time=2026-10-25T14:21:45.475Z level=INFO msg="scan status fields" phase=before_wait bytes=72 state=0x00000080 no_paper=true cover_open=false jam=false unknown_state_bits=0x00000000 error_field=0x[REDACTED]0000 error_code=0x0000 error_upper=0x[REDACTED] reserved_48=0x00000000 reserved_52=0x00000000 device_flags=0x00000000 reserved_60=0x00000000 reserved_64=0x00000000 reserved_68=0x00000000
+time=2026-10-25T14:21:45.475Z level=WARN msg="terminal status rejected" phase=terminal bytes=72 state=0x00000080 no_paper=true cover_open=false jam=false unknown_state_bits=0x00000000 error_field=0x[REDACTED]0000 error_code=0x0000 error_upper=0x[REDACTED] reserved_48=0x00000000 reserved_52=0x00000000 device_flags=0x00000000 reserved_60=0x00000000 reserved_64=0x00000000 reserved_68=0x00000000
+time=2026-10-25T14:21:45.475Z level=WARN msg="terminal status rejected: sense" bytes=58 format=0x70 key=0x00 asc=0x00 ascq=0x00
+time=2026-10-25T14:21:45.475Z level=WARN msg="terminal status rejected: status after sense" phase=after_sense bytes=72 state=0x00000080 no_paper=true cover_open=false jam=false unknown_state_bits=0x00000000 error_field=0x[REDACTED]0000 error_code=0x0000 error_upper=0x[REDACTED] reserved_48=0x00000000 reserved_52=0x00000000 device_flags=0x00000000 reserved_60=0x00000000 reserved_64=0x00000000 reserved_68=0x00000000
+time=2026-10-25T14:21:45.478Z level=WARN msg="browser scan failed; no document released" reason=terminal_status_rejected err="terminal status is not clean no-paper: error field 0x[REDACTED]0000 (code 0x0000, upper 0x[REDACTED])"
+time=2026-10-25T14:21:46.449Z level=INFO msg="starting scan session" source=button job=b82279ec05f740a39f643382802ea6f8 mode=letters colorMode=1 quality=3 duplex=true paperSize=0
+time=2026-10-25T14:21:46.450Z level=INFO msg="scan status" status=0x00000000
+time=2026-10-25T14:21:46.450Z level=INFO msg="scan started"
+time=2026-10-25T14:21:46.455Z level=INFO msg="page received" sheet=0 side=0 bytes=3060
+time=2026-10-25T14:21:46.459Z level=INFO msg="page received" sheet=0 side=1 bytes=3059
+time=2026-10-25T14:21:46.463Z level=INFO msg="scan status" status=0x00000000
+time=2026-10-25T14:21:46.463Z level=INFO msg="scan status fields" phase=before_wait bytes=72 state=0x00000000 no_paper=false cover_open=false jam=false unknown_state_bits=0x00000000 error_field=0x00000000 error_code=0x0000 error_upper=0x0000 reserved_48=0x00000000 reserved_52=0x00000000 device_flags=0x00000000 reserved_60=0x00000000 reserved_64=0x00000000 reserved_68=0x00000000
+time=2026-10-25T14:21:46.465Z level=INFO msg="page received" sheet=1 side=0 bytes=3060
+time=2026-10-25T14:21:46.471Z level=INFO msg="page received" sheet=1 side=1 bytes=3059
+time=2026-10-25T14:21:46.474Z level=INFO msg="scan status" status=0x00000080
+time=2026-10-25T14:21:46.474Z level=INFO msg="scan status fields" phase=before_wait bytes=72 state=0x00000080 no_paper=true cover_open=false jam=false unknown_state_bits=0x00000000 error_field=0x00000000 error_code=0x0000 error_upper=0x0000 reserved_48=0x00000000 reserved_52=0x00000000 device_flags=0x00000000 reserved_60=0x00000000 reserved_64=0x00000000 reserved_68=0x00000000
+time=2026-10-25T14:21:46.474Z level=WARN msg="terminal status rejected" phase=terminal bytes=72 state=0x00000081 no_paper=true cover_open=false jam=false unknown_state_bits=0x0000[REDACTED] error_field=0x00000000 error_code=0x0000 error_upper=0x0000 reserved_48=0x00000000 reserved_52=0x00000000 device_flags=0x00000000 reserved_60=0x00000000 reserved_64=0x00000000 reserved_68=0x00000000
+time=2026-10-25T14:21:46.474Z level=WARN msg="terminal status rejected: sense" bytes=58 format=0x70 key=0x00 asc=0x00 ascq=0x00
+time=2026-10-25T14:21:46.474Z level=WARN msg="terminal status rejected: status after sense" phase=after_sense bytes=72 state=0x00000081 no_paper=true cover_open=false jam=false unknown_state_bits=0x0000[REDACTED] error_field=0x00000000 error_code=0x0000 error_upper=0x0000 reserved_48=0x00000000 reserved_52=0x00000000 device_flags=0x00000000 reserved_60=0x00000000 reserved_64=0x00000000 reserved_68=0x00000000
+time=2026-10-25T14:21:46.477Z level=WARN msg="browser scan failed; no document released" reason=terminal_status_rejected err="terminal status is not clean no-paper: scan state 0x00000081 (expected 0x00000080, unknown bits 0x0000[REDACTED])"
+time=2026-10-25T14:21:47.449Z level=INFO msg="starting scan session" source=button job=de07d9d2b22c4bd5a0bada63e851d4b9 mode=letters colorMode=1 quality=3 duplex=false paperSize=0
+time=2026-10-25T14:21:47.450Z level=INFO msg="scan status" status=0x00000000
+time=2026-10-25T14:21:47.450Z level=INFO msg="scan started"
+time=2026-10-25T14:21:47.455Z level=INFO msg="page received" sheet=0 side=0 bytes=3060
+time=2026-10-25T14:21:47.459Z level=INFO msg="scan status" status=0x00000000
+time=2026-10-25T14:21:47.459Z level=INFO msg="scan status fields" phase=before_wait bytes=72 state=0x00000000 no_paper=false cover_open=false jam=false unknown_state_bits=0x00000000 error_field=0x00000000 error_code=0x0000 error_upper=0x0000 reserved_48=0x00000000 reserved_52=0x00000000 device_flags=0x00000000 reserved_60=0x00000000 reserved_64=0x00000000 reserved_68=0x00000000
+time=2026-10-25T14:21:47.460Z level=INFO msg="page received" sheet=1 side=0 bytes=3060
+time=2026-10-25T14:21:47.464Z level=INFO msg="scan status" status=0x00000000
+time=2026-10-25T14:21:47.464Z level=INFO msg="scan status fields" phase=before_wait bytes=72 state=0x00000000 no_paper=false cover_open=false jam=false unknown_state_bits=0x00000000 error_field=0x00000000 error_code=0x0000 error_upper=0x0000 reserved_48=0x00000000 reserved_52=0x00000000 device_flags=0x00000000 reserved_60=0x00000000 reserved_64=0x00000000 reserved_68=0x00000000
+time=2026-10-25T14:21:47.465Z level=INFO msg="page received" sheet=2 side=0 bytes=3061
+time=2026-10-25T14:21:47.468Z level=INFO msg="scan status" status=0x00000000
+time=2026-10-25T14:21:47.468Z level=INFO msg="scan status fields" phase=before_wait bytes=72 state=0x00000000 no_paper=false cover_open=false jam=false unknown_state_bits=0x00000000 error_field=0x00000000 error_code=0x0000 error_upper=0x0000 reserved_48=0x00000000 reserved_52=0x00000000 device_flags=0x00000000 reserved_60=0x00000000 reserved_64=0x00000000 reserved_68=0x00000000
+time=2026-10-25T14:21:47.470Z level=INFO msg="page received" sheet=3 side=0 bytes=3063
+time=2026-10-25T14:21:47.470Z level=WARN msg="scanner error in sense data" err="paper jam" kind=2
+time=2026-10-25T14:21:47.472Z level=WARN msg="browser scan failed; no document released" reason=paper_jam err="paper jam"
+time=2026-10-25T14:21:48.448Z level=INFO msg="starting scan session" source=button job=fd5a6f15d5494c95857cb8eca9e76e42 mode=letters colorMode=1 quality=3 duplex=false paperSize=0
+time=2026-10-25T14:21:48.449Z level=INFO msg="scan status" status=0x00000000
+time=2026-10-25T14:21:48.449Z level=INFO msg="scan started"
+time=2026-10-25T14:21:48.453Z level=INFO msg="page received" sheet=0 side=0 bytes=3060
+time=2026-10-25T14:21:48.456Z level=INFO msg="scan status" status=0x00000080
+time=2026-10-25T14:21:48.456Z level=INFO msg="scan status fields" phase=before_wait bytes=72 state=0x00000080 no_paper=true cover_open=false jam=false unknown_state_bits=0x00000000 error_field=0x00000000 error_code=0x0000 error_upper=0x0000 reserved_48=0x00000000 reserved_52=0x00000000 device_flags=0x00000000 reserved_60=0x00000000 reserved_64=0x00000000 reserved_68=0x00000000
+time=2026-10-25T14:21:48.456Z level=INFO msg="terminal sense" bytes=58 format=0x70 key=0x00 asc=0x00 ascq=0x00
+time=2026-10-25T14:21:52.613Z level=INFO msg="scan preview starting" colorMode=0 quality=0 duplex=false
+time=2026-10-25T14:21:52.613Z level=INFO msg=http method=POST path=/ui/api/scan/preview status=403 remote=127.0.0.1:34010 duration=0s
+time=2026-10-25T14:21:52.640Z level=INFO msg="shutting down..."
+time=2026-10-25T14:21:52.640Z level=INFO msg="shutdown complete"
+time=2026-10-25T14:21:52.641Z level=INFO msg="disconnected from scanner"

@@ -183,8 +183,15 @@ func (c *Control) Authorize(ctx context.Context, source Source) (Grant, error) {
 	if err := c.negotiate(ctx); err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrNotAuthorized, err)
 	}
-	body, status, err := c.post(ctx, "/internal/v1/reservations",
-		map[string]string{"source": string(source)})
+	payload := map[string]string{"source": string(source)}
+	if command, ok := requestedCommand(ctx); ok {
+		if !reservationPattern.MatchString(command.ID) || !reservationPattern.MatchString(command.JobID) {
+			return nil, fmt.Errorf("%w: invalid browser command", ErrNotAuthorized)
+		}
+		payload["expected_job"] = command.JobID
+		payload["command_id"] = command.ID
+	}
+	body, status, err := c.post(ctx, "/internal/v1/reservations", payload)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrNotAuthorized, err)
 	}
@@ -197,6 +204,9 @@ func (c *Control) Authorize(ctx context.Context, source Source) (Grant, error) {
 		return nil, fmt.Errorf("%w: invalid reservation response", ErrNotAuthorized)
 	}
 	settings, settingsOK := r.scanSettings()
+	if command, ok := requestedCommand(ctx); ok && r.JobID != command.JobID {
+		return nil, fmt.Errorf("%w: browser command job mismatch", ErrNotAuthorized)
+	}
 	if !reservationPattern.MatchString(r.ReservationID) || !printablePattern.MatchString(r.JobID) ||
 		r.Status != "reserved" || r.Source != string(source) ||
 		(r.Mode != "" && !printablePattern.MatchString(r.Mode)) || !settingsOK {

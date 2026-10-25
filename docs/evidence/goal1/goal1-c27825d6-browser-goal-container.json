@@ -1,0 +1,38 @@
+{
+  "Id": "49079c3f599295dcec42d29245e46cac6b5e204b525c552143a35d4fcc16ebc8",
+  "Name": "/goal1-c27825d6-browser-goal",
+  "Image": "sha256:aaf9aa4a5bd8b4c52046de36518295f56a7ebf49851c2b48d9df5af9dcd3f653",
+  "State": {
+    "Status": "exited",
+    "Running": false,
+    "Paused": false,
+    "Restarting": false,
+    "OOMKilled": false,
+    "Dead": false,
+    "Pid": 0,
+    "ExitCode": 0,
+    "Error": "",
+    "StartedAt": "2026-10-25T14:21:30.87054514Z",
+    "FinishedAt": "2026-10-25T14:21:52.223215332Z"
+  },
+  "Mounts": [
+    {
+      "Type": "bind",
+      "Source": "/workspace/goal1-control/tests/emergency",
+      "Destination": "/driver",
+      "Mode": "ro",
+      "RW": false,
+      "Propagation": "rprivate"
+    },
+    {
+      "Type": "volume",
+      "Name": "goal1-c27825d6-testdata",
+      "Source": "/var/lib/docker/volumes/goal1-c27825d6-testdata/_data",
+      "Destination": "/evidence",
+      "Driver": "local",
+      "Mode": "z",
+      "RW": true,
+      "Propagation": ""
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "Id": "cc4020156a747cf0acdd488919e6405950a7f3ab10a8bfb7fb404bc8a6800018",
+  "Name": "/goal1-c27825d6-control",
+  "Image": "sha256:046368107ebb57f6d8524c3fd9ca25cf7220cd573b82b80e1f3983c63133de4c",
+  "State": {
+    "Status": "exited",
+    "Running": false,
+    "Paused": false,
+    "Restarting": false,
+    "OOMKilled": false,
+    "Dead": false,
+    "Pid": 0,
+    "ExitCode": 0,
+    "Error": "",
+    "StartedAt": "2026-10-25T14:22:02.02547837Z",
+    "FinishedAt": "2026-10-25T14:22:13.905795332Z"
+  },
+  "Mounts": [
+    {
+      "Type": "volume",
+      "Name": "goal1-c27825d6-testdata",
+      "Source": "/var/lib/docker/volumes/goal1-c27825d6-testdata/_data",
+      "Destination": "/srv/scansnap",
+      "Driver": "local",
+      "Mode": "z",
+      "RW": true,
+      "Propagation": ""
+    },
+    {
+      "Type": "volume",
+      "Name": "goal1-c27825d6-testdata",
+      "Source": "/var/lib/docker/volumes/goal1-c27825d6-testdata/_data",
+      "Destination": "/run/test-secrets",
+      "Driver": "local",
+      "Mode": "z",
+      "RW": false,
+      "Propagation": ""
+    }
+  ]
+}

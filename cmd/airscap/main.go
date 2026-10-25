@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -19,6 +20,7 @@ import (
 	"github.com/OpenPrinting/go-mfp/util/optional"
 	"github.com/grandcat/zeroconf"
 
+	"github.com/mzyy94/airscap/internal/authz"
 	"github.com/mzyy94/airscap/internal/config"
 	"github.com/mzyy94/airscap/internal/scanner"
 	"github.com/mzyy94/airscap/internal/vens"
@@ -140,13 +142,14 @@ func main() {
 	// Uses scanner.ScanGuard (deadline-based busy flag) so a stuck goroutine
 	// or panic cannot permanently block subsequent scans.
 	scanGuard := scanner.NewScanGuard(5 * time.Minute)
+	var scanGate sync.Mutex
 	onButtonPress := func() {
-		if !scanGuard.TryAcquire() {
+		if !scanGate.TryLock() {
 			slog.Warn("scan already in progress, ignoring button press")
 			return
 		}
 		go func() {
-			defer scanGuard.Release()
+			defer scanGate.Unlock()
 			intake := os.Getenv("AIRSCAP_STAGING_DIR")
 			if intake == "" {
 				slog.Warn("private intake not configured: button refused")
@@ -161,6 +164,16 @@ func main() {
 			}
 
 		}()
+	}
+	if os.Getenv("AIRSCAP_BROWSER_SCAN_ENABLED") == "1" {
+		control, ok := authorizer.(*authz.Control)
+		if !ok || os.Getenv("AIRSCAP_STAGING_DIR") == "" {
+			slog.Error("browser scanning requires Control authorization and private intake")
+			os.Exit(1)
+		}
+		go browserCommandLoop(ctx, control, sc, &scanGate,
+			func() vens.ScanConfig { return scanner.SettingsToScanConfig(settingsStore.Get()) },
+			os.Getenv("AIRSCAP_STAGING_DIR"), scanStatus)
 	}
 
 	btnListener := scanner.NewButtonListener(sc.Host(), onButtonPress)

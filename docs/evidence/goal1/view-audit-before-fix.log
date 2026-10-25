@@ -1,0 +1,21 @@
+test_failed_view_audit_does_not_enable_approval (tests.test_emergency.EmergencyTests.test_failed_view_audit_does_not_enable_approval) ... FAIL
+
+======================================================================
+FAIL: test_failed_view_audit_does_not_enable_approval (tests.test_emergency.EmergencyTests.test_failed_view_audit_does_not_enable_approval)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_emergency.py", line 182, in test_failed_view_audit_does_not_enable_approval
+    self.assertEqual(self.sql('SELECT viewed_session FROM emergency_documents'),[(None,)])
+AssertionError: Lists differ: [('e5354edff93c76306730d170ec3f9af8fb76bad709d475735674c4025181fabb',)] != [(None,)]
+
+First differing element 0:
+('e5354edff93c76306730d170ec3f9af8fb76bad709d475735674c4025181fabb',)
+(None,)
+
+- [('e5354edff93c76306730d170ec3f9af8fb76bad709d475735674c4025181fabb',)]
++ [(None,)]
+
+----------------------------------------------------------------------
+Ran 1 test in 0.066s
+
+FAILED (failures=1)

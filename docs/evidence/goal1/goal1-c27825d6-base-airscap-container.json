@@ -1,0 +1,40 @@
+{
+  "Id": "b628a9d6c2a06be94c1d2e63ad66fdad210fc12f5ae2c1d3ea364c781504e9b8",
+  "Name": "/goal1-c27825d6-base-airscap",
+  "Image": "sha256:d57717b153a44da6e8966990971b5302f527ffc0272dcdee45d85d505d203825",
+  "State": {
+    "Status": "exited",
+    "Running": false,
+    "Paused": false,
+    "Restarting": false,
+    "OOMKilled": false,
+    "Dead": false,
+    "Pid": 0,
+    "ExitCode": 0,
+    "Error": "",
+    "StartedAt": "2026-10-25T14:21:53.173438396Z",
+    "FinishedAt": "2026-10-25T14:22:01.614521559Z"
+  },
+  "Mounts": [
+    {
+      "Type": "volume",
+      "Name": "goal1-c27825d6-testdata",
+      "Source": "/var/lib/docker/volumes/goal1-c27825d6-testdata/_data",
+      "Destination": "/srv/scansnap",
+      "Driver": "local",
+      "Mode": "z",
+      "RW": true,
+      "Propagation": ""
+    },
+    {
+      "Type": "volume",
+      "Name": "goal1-c27825d6-testdata",
+      "Source": "/var/lib/docker/volumes/goal1-c27825d6-testdata/_data",
+      "Destination": "/run/test-secrets",
+      "Driver": "local",
+      "Mode": "z",
+      "RW": false,
+      "Propagation": ""
+    }
+  ]
+}

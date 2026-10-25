@@ -123,3 +123,13 @@ CGO_ENABLED=0 go test -mod=vendor -overlay=build/overlay.json -tags integration 
 
 The helper command gets `reset|expire|close|restart|dump <db>` and changes
 only that throwaway database (see `control_integration_test.go`).
+
+## Ziel 1: ausdrücklich aktivierter Browser-Notbetrieb
+
+`AIRSCAP_BROWSER_SCAN_ENABLED=1` ergänzt ausschließlich einen ausgehenden,
+scanner-authentisierten Control-Command-Poller. Kein neuer AirScap-Listener.
+Browser- und Tastenscan teilen eine durchgehende Mutex und den vorhandenen
+QNAP-Reservierungspfad. A1-Vertrag v2 bleibt erhalten; der optionale Zusatz
+liegt in `internal/authz/testdata/emergency-scan.json`. A5-Diagnose ändert
+keine Abschlussentscheidung. A2 bleibt eine eigenständige Testkomponente.
+Details, Grenzen, Canary-Freigabepunkte und Rollback: `goal1-emergency.md`.
