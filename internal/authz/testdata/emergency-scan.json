@@ -1,0 +1,37 @@
+{
+  "name": "scansnap-emergency-local",
+  "version": 1,
+  "core_scanner_contract": 2,
+  "opt_in": {
+    "control": "SSC_EMERGENCY_MODE=1 via app.emergency_service",
+    "airscap": "AIRSCAP_BROWSER_SCAN_ENABLED=1"
+  },
+  "browser_start": "POST /api/v1/jobs/{job}/scan {command_id: 32hex}; existing C3 cookie + Origin + CSRF, arming session only",
+  "private_poll": "POST /internal/v1/emergency/next; scanner Bearer; 204 idle or 200 {id,job_id}; consumes queued command once",
+  "reservation_extension": {
+    "source": "button",
+    "expected_job": "32hex",
+    "command_id": "32hex; dispatched exactly once; binding checked before feed"
+  },
+  "physical_button": "valid QNAP arming session required; tracked by same emergency ledger; blocked against queued browser command",
+  "private_complete": "POST /internal/v1/emergency/commands/{id}/complete {result}; scanner Bearer",
+  "results": [
+    "staged",
+    "terminal_status_rejected",
+    "authorization_lost",
+    "scanner_failure",
+    "no_paper",
+    "paper_jam",
+    "multi_feed",
+    "cover_open"
+  ],
+  "artifact": "existing immutable staged_not_released manifest and private .scan envelope; no release from command ack",
+  "unsupported": "404/invalid response means no command and no browser scan; no unprotected fallback",
+  "document_states": [
+    "review_required",
+    "approved",
+    "saved"
+  ],
+  "processing": "emergency_local_no_worker",
+  "output": "SSC_ROOT/emergency-output; opt-in save, same filesystem, no overwrite; no worker proof"
+}

@@ -1,0 +1,24 @@
+time=2026-10-25T14:21:12.741Z level=INFO msg="scanner identity computed"
+time=2026-10-25T14:21:12.741Z level=INFO msg="scan authorization: ScanSnap Control reservations required"
+time=2026-10-25T14:21:12.742Z level=INFO msg="found scanner" name=iX500-SIM serial=iX500-**** ip=172.31.134.10 data_port=53218 control_port=53219
+time=2026-10-25T14:21:13.045Z level=INFO msg="pairing accepted"
+time=2026-10-25T14:21:13.047Z level=INFO msg="connected to scanner" host=172.31.134.10 name=iX500-SIM serial=iX500-**** deviceName="FUJITSU ScanSnap iX500"
+time=2026-10-25T14:21:13.047Z level=INFO msg="settings store initialized (memory-only, set AIRSCAP_DATA_DIR to persist)"
+time=2026-10-25T14:21:13.047Z level=INFO msg="button listener started" port=55265
+time=2026-10-25T14:21:13.047Z level=INFO msg="eSCL/Web UI on loopback only; no mDNS advertisement" addr=127.0.0.1:18080
+time=2026-10-25T14:21:13.047Z level=INFO msg="eSCL server starting" addr=127.0.0.1:18080 escl=http://172.31.134.20:18080/eSCL ui=http://172.31.134.20:18080/ui/
+time=2026-10-25T14:21:21.498Z level=INFO msg="shutting down..."
+time=2026-10-25T14:21:21.498Z level=INFO msg="shutdown complete"
+time=2026-10-25T14:21:21.502Z level=INFO msg="disconnected from scanner"
+time=2026-10-25T14:21:53.247Z level=INFO msg="scanner identity computed"
+time=2026-10-25T14:21:53.247Z level=INFO msg="scan authorization: ScanSnap Control reservations required"
+time=2026-10-25T14:21:53.247Z level=INFO msg="found scanner" name=iX500-SIM serial=iX500-**** ip=172.31.134.10 data_port=53218 control_port=53219
+time=2026-10-25T14:21:53.549Z level=INFO msg="pairing accepted"
+time=2026-10-25T14:21:53.551Z level=INFO msg="connected to scanner" host=172.31.134.10 name=iX500-SIM serial=iX500-**** deviceName="FUJITSU ScanSnap iX500"
+time=2026-10-25T14:21:53.551Z level=INFO msg="settings store initialized (memory-only, set AIRSCAP_DATA_DIR to persist)"
+time=2026-10-25T14:21:53.551Z level=INFO msg="button listener started" port=55265
+time=2026-10-25T14:21:53.551Z level=INFO msg="eSCL/Web UI on loopback only; no mDNS advertisement" addr=127.0.0.1:18080
+time=2026-10-25T14:21:53.551Z level=INFO msg="eSCL server starting" addr=127.0.0.1:18080 escl=http://172.31.134.20:18080/eSCL ui=http://172.31.134.20:18080/ui/
+time=2026-10-25T14:22:01.612Z level=INFO msg="shutting down..."
+time=2026-10-25T14:22:01.612Z level=INFO msg="shutdown complete"
+time=2026-10-25T14:22:01.612Z level=INFO msg="disconnected from scanner"

@@ -1,0 +1,89 @@
+test_arbitrary_active_pdf_even_with_matching_hash_is_refused (tests.test_emergency.EmergencyTests.test_arbitrary_active_pdf_even_with_matching_hash_is_refused) ... ok
+test_browser_and_scanner_authentication_are_separate (tests.test_emergency.EmergencyTests.test_browser_and_scanner_authentication_are_separate) ... ok
+test_database_failure_after_link_is_explicit_and_replay_safe (tests.test_emergency.EmergencyTests.test_database_failure_after_link_is_explicit_and_replay_safe) ... ok
+test_extra_archive_member_is_refused (tests.test_emergency.EmergencyTests.test_extra_archive_member_is_refused) ... ok
+test_failed_or_partial_scan_never_becomes_a_document (tests.test_emergency.EmergencyTests.test_failed_or_partial_scan_never_becomes_a_document) ... ok
+test_failed_post_scan_envelope_write_can_be_quarantined_without_a_receipt (tests.test_emergency.EmergencyTests.test_failed_post_scan_envelope_write_can_be_quarantined_without_a_receipt) ... ok
+test_failed_view_audit_does_not_enable_approval (tests.test_emergency.EmergencyTests.test_failed_view_audit_does_not_enable_approval) ... ok
+test_new_login_preserves_documents_but_requires_new_review (tests.test_emergency.EmergencyTests.test_new_login_preserves_documents_but_requires_new_review) ... ok
+test_no_overwrite_of_foreign_destination (tests.test_emergency.EmergencyTests.test_no_overwrite_of_foreign_destination) ... ok
+test_no_release_before_view_approval_and_explicit_save (tests.test_emergency.EmergencyTests.test_no_release_before_view_approval_and_explicit_save) ... ok
+test_normal_worker_service_refuses_emergency_configuration (tests.test_emergency.EmergencyTests.test_normal_worker_service_refuses_emergency_configuration) ... ok
+test_page_count_and_deflate_bombs_fail_closed (tests.test_emergency.EmergencyTests.test_page_count_and_deflate_bombs_fail_closed) ... ok
+test_parallel_save_has_one_name_and_no_duplicate_event (tests.test_emergency.EmergencyTests.test_parallel_save_has_one_name_and_no_duplicate_event) ... ok
+test_physical_button_uses_the_same_gate_and_creates_no_unreviewed_release (tests.test_emergency.EmergencyTests.test_physical_button_uses_the_same_gate_and_creates_no_unreviewed_release) ... ok
+test_queue_is_once_and_bound_before_reservation (tests.test_emergency.EmergencyTests.test_queue_is_once_and_bound_before_reservation) ... ok
+test_recovery_requires_idle_snapshot_and_explicit_operator_decision (tests.test_emergency.EmergencyTests.test_recovery_requires_idle_snapshot_and_explicit_operator_decision) ... ok
+test_restart_never_redispatches_an_uncertain_command (tests.test_emergency.EmergencyTests.test_restart_never_redispatches_an_uncertain_command) ... ok
+test_truncated_canonical_pdf_is_refused (tests.test_emergency.EmergencyTests.test_truncated_canonical_pdf_is_refused) ... ok
+test_unmarked_existing_database_is_refused_without_changes (tests.test_emergency.EmergencyTests.test_unmarked_existing_database_is_refused_without_changes) ... ok
+test_background_poll_does_not_extend_the_sign_in (tests.test_single_account.SingleAccountTests.test_background_poll_does_not_extend_the_sign_in) ... ok
+test_background_poll_lets_the_sign_in_end (tests.test_single_account.SingleAccountTests.test_background_poll_lets_the_sign_in_end) ... ok
+test_documents_survive_new_login_and_second_device (tests.test_single_account.SingleAccountTests.test_documents_survive_new_login_and_second_device) ... ok
+test_exactly_one_account (tests.test_single_account.SingleAccountTests.test_exactly_one_account) ... ok
+test_job_list_is_newest_first_within_the_same_second (tests.test_single_account.SingleAccountTests.test_job_list_is_newest_first_within_the_same_second) ... ok
+test_login_brake (tests.test_single_account.SingleAccountTests.test_login_brake) ... ok
+test_old_failures_expire (tests.test_single_account.SingleAccountTests.test_old_failures_expire) ... ok
+test_only_scanner_activity_moves_the_scan_window (tests.test_single_account.SingleAccountTests.test_only_scanner_activity_moves_the_scan_window) ... ok
+test_restart_with_same_token_keeps_sessions (tests.test_single_account.SingleAccountTests.test_restart_with_same_token_keeps_sessions) ... ok
+test_session_binding_is_not_the_token (tests.test_single_account.SingleAccountTests.test_session_binding_is_not_the_token) ... ok
+test_token_change_revokes_sessions_and_keeps_documents (tests.test_single_account.SingleAccountTests.test_token_change_revokes_sessions_and_keeps_documents) ... ok
+test_contract_file_is_the_shared_version (tests.test_scanner_contract.ContractFileTests.test_contract_file_is_the_shared_version) ... ok
+test_contract_file_matches_the_implementation (tests.test_scanner_contract.ContractFileTests.test_contract_file_matches_the_implementation) ... ok
+test_client_version_recorded_and_checked (tests.test_scanner_contract.GatewayV2Tests.test_client_version_recorded_and_checked) ... ok
+test_contract_endpoint_and_header_on_every_answer (tests.test_scanner_contract.GatewayV2Tests.test_contract_endpoint_and_header_on_every_answer) ... ok
+test_finish_outcomes (tests.test_scanner_contract.GatewayV2Tests.test_finish_outcomes) ... ok
+test_finished_and_failed_reservations_are_never_touched (tests.test_scanner_contract.GatewayV2Tests.test_finished_and_failed_reservations_are_never_touched) ... ok
+test_orphaned_reservation_found_without_restart (tests.test_scanner_contract.GatewayV2Tests.test_orphaned_reservation_found_without_restart) ... ok
+test_restart_and_cancel_record_their_reason (tests.test_scanner_contract.GatewayV2Tests.test_restart_and_cancel_record_their_reason) ... ok
+test_service_pass_reports_orphans_without_secrets (tests.test_scanner_contract.GatewayV2Tests.test_service_pass_reports_orphans_without_secrets) ... ok
+test_session_end_distinguishes_running_and_unresolved_scans (tests.test_scanner_contract.GatewayV2Tests.test_session_end_distinguishes_running_and_unresolved_scans) ... ok
+test_end_rejected_while_scanner_reserved (tests.test_scanner_session_safety.ScannerSessionSafetyTests.test_end_rejected_while_scanner_reserved) ... ok
+test_expired_reserved_job_blocks_new_session (tests.test_scanner_session_safety.ScannerSessionSafetyTests.test_expired_reserved_job_blocks_new_session) ... ok
+test_recovery_required_blocks_new_session (tests.test_scanner_session_safety.ScannerSessionSafetyTests.test_recovery_required_blocks_new_session) ... ok
+test_bearer_not_public_session (tests.test_browser_sessions.BrowserSessionTests.test_bearer_not_public_session) ... ok
+test_cookie_and_csrf (tests.test_browser_sessions.BrowserSessionTests.test_cookie_and_csrf) ... ok
+test_cross_origin_and_scanner_token_refused (tests.test_browser_sessions.BrowserSessionTests.test_cross_origin_and_scanner_token_refused) ... ok
+test_expiry_rotation_and_database_failure (tests.test_browser_sessions.BrowserSessionTests.test_expiry_rotation_and_database_failure) ... ok
+test_logout_or_expiry_revokes_scan_authority (tests.test_browser_sessions.BrowserSessionTests.test_logout_or_expiry_revokes_scan_authority) ... ok
+test_logout_revokes_stolen_cookie (tests.test_browser_sessions.BrowserSessionTests.test_logout_revokes_stolen_cookie) ... ok
+test_owner_can_cancel_without_freeing_scanner_or_document (tests.test_browser_sessions.BrowserSessionTests.test_owner_can_cancel_without_freeing_scanner_or_document) ... ok
+test_atomic_no_clobber_and_idempotent (tests.test_final_publication.PublicationTests.test_atomic_no_clobber_and_idempotent) ... ok
+test_crash_after_link_retry_has_single_file (tests.test_final_publication.PublicationTests.test_crash_after_link_retry_has_single_file) ... ok
+test_existing_foreign_file_never_overwritten (tests.test_final_publication.PublicationTests.test_existing_foreign_file_never_overwritten) ... ok
+test_explicit_consumer_is_read_only (tests.test_final_publication.PublicationTests.test_explicit_consumer_is_read_only) ... ok
+test_no_release_without_both_gates (tests.test_final_publication.PublicationTests.test_no_release_without_both_gates) ... ok
+test_parallel_publish_creates_one_final_name (tests.test_final_publication.PublicationTests.test_parallel_publish_creates_one_final_name) ... ok
+test_tamper_and_database_failure_stay_closed (tests.test_final_publication.PublicationTests.test_tamper_and_database_failure_stay_closed) ... ok
+test_binding_and_timeout (tests.test_scan_receipts.ReceiptTests.test_binding_and_timeout) ... ok
+test_complete_not_released_idempotent (tests.test_scan_receipts.ReceiptTests.test_complete_not_released_idempotent) ... ok
+test_conflicting_replay (tests.test_scan_receipts.ReceiptTests.test_conflicting_replay) ... ok
+test_database_failure_rolls_back (tests.test_scan_receipts.ReceiptTests.test_database_failure_rolls_back) ... ok
+test_expired_finish_never_makes_receipt_eligible (tests.test_scan_receipts.ReceiptTests.test_expired_finish_never_makes_receipt_eligible) ... ok
+test_failed_scan_keeps_scanner_blocked (tests.test_scan_receipts.ReceiptTests.test_failed_scan_keeps_scanner_blocked) ... ok
+test_unfinished_abort_or_recovery_refused (tests.test_scan_receipts.ReceiptTests.test_unfinished_abort_or_recovery_refused) ... ok
+test_foreign_or_open_directory_refused (tests.test_service.CoordinatorPassTests.test_foreign_or_open_directory_refused) ... ok
+test_fresh_tls_and_private_directories_each_pass (tests.test_service.CoordinatorPassTests.test_fresh_tls_and_private_directories_each_pass) ... ok
+test_loop_survives_failures (tests.test_service.CoordinatorPassTests.test_loop_survives_failures) ... coordinator pass failed: OperationalError
+coordinator pass failed: OSError
+coordinator pass failed: OperationalError
+coordinator pass failed: OSError
+coordinator pass failed: OperationalError
+coordinator pass failed: OSError
+ok
+test_complete_configuration (tests.test_service.ServiceConfigTests.test_complete_configuration) ... ok
+test_refusals (tests.test_service.ServiceConfigTests.test_refusals) ... ok
+test_service_starts_and_stops (tests.test_service.ServiceStartTests.test_service_starts_and_stops) ... /usr/local/lib/python3.12/unittest/case.py:669: ResourceWarning: unclosed file <_io.BufferedReader name=3>
+  function, args, kwargs = self._cleanups.pop()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_every_server_refusal_has_a_german_message (tests.test_dashboard.DashboardTests.test_every_server_refusal_has_a_german_message) ... ok
+test_messages_and_logout_stay_visible_after_sign_in (tests.test_dashboard.DashboardTests.test_messages_and_logout_stay_visible_after_sign_in) ... ok
+test_no_stale_or_misleading_texts (tests.test_dashboard.DashboardTests.test_no_stale_or_misleading_texts) ... ok
+test_responsive_preview (tests.test_dashboard.DashboardTests.test_responsive_preview) ... ok
+test_security_headers_and_in_memory_token (tests.test_dashboard.DashboardTests.test_security_headers_and_in_memory_token) ... ok
+
+----------------------------------------------------------------------
+Ran 75 tests in 2.546s
+
+OK

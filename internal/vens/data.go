@@ -7,6 +7,7 @@ import (
 	"io"
 	"log/slog"
 	"net"
+	"strings"
 	"time"
 )
 
@@ -335,6 +336,7 @@ func (s *ScanSession) NextPage() (Page, error) {
 		if len(statusResp) >= StatusRespScanStatusOffset+4 {
 			scanStatus := binary.BigEndian.Uint32(statusResp[StatusRespScanStatusOffset : StatusRespScanStatusOffset+4])
 			slog.Info("scan status", "status", fmt.Sprintf("0x%08X", scanStatus))
+			slog.Info("scan status fields", statusFieldAttrs("before_wait", statusResp)...)
 		}
 
 		// Check for scanner error (multi-feed, etc.) at offset 44
@@ -622,11 +624,15 @@ func (d *DataChannel) CheckADFStatus() (*ADFStatus, error) {
 	return result, nil
 }
 
+// endConfirmationTimeout bounds each request of confirmDocumentEnd,
+// including the diagnostic requests after a rejection (at most +2x).
+var endConfirmationTimeout = 5 * time.Second
+
 // confirmDocumentEnd accepts only an explicit no-paper status, no error and a
 // complete normal SCSI sense record. Paper intent still requires human review.
 func (s *ScanSession) confirmDocumentEnd() error {
 	query := func(request []byte) ([]byte, error) {
-		s.conn.SetDeadline(time.Now().Add(5 * time.Second))
+		s.conn.SetDeadline(time.Now().Add(endConfirmationTimeout))
 		if _, err := s.conn.Write(request); err != nil {
 			return nil, fmt.Errorf("end confirmation send: %w", err)
 		}
@@ -649,7 +655,17 @@ func (s *ScanSession) confirmDocumentEnd() error {
 	state := binary.BigEndian.Uint32(status[StatusRespScanStatusOffset : StatusRespScanStatusOffset+4])
 	errorField := binary.BigEndian.Uint32(status[StatusRespErrorOffset : StatusRespErrorOffset+4])
 	if state != ADFPaperMask || errorField != 0 {
-		return fmt.Errorf("terminal status is not clean no-paper")
+		// Diagnostics only: the decision above is final. Log both fields
+		// separately, then what the scanner reports as sense and status
+		// after it, so a hardware run shows which field and why.
+		slog.Warn("terminal status rejected", statusFieldAttrs("terminal", status)...)
+		if sense, serr := query(MarshalGetPageMetadata(s.token)); serr == nil {
+			slog.Warn("terminal status rejected: sense", senseAttrs(sense)...)
+			if again, aerr := query(MarshalGetStatus(s.token)); aerr == nil {
+				slog.Warn("terminal status rejected: status after sense", statusFieldAttrs("after_sense", again)...)
+			}
+		}
+		return &TerminalStatusError{State: state, ErrorField: errorField}
 	}
 	sense, err := query(MarshalGetPageMetadata(s.token))
 	if err != nil {
@@ -658,6 +674,7 @@ func (s *ScanSession) confirmDocumentEnd() error {
 	if len(sense) < SenseDataOffset+18 || sense[SenseDataOffset+7] < 10 || len(sense) < SenseDataOffset+8+int(sense[SenseDataOffset+7]) {
 		return fmt.Errorf("short terminal sense")
 	}
+	slog.Info("terminal sense", senseAttrs(sense)...)
 	code := sense[SenseDataOffset] & 0x7f
 	if code != 0x70 && code != 0x71 {
 		return fmt.Errorf("unknown terminal sense format")
@@ -669,4 +686,69 @@ func (s *ScanSession) confirmDocumentEnd() error {
 		return fmt.Errorf("ambiguous terminal sense")
 	}
 	return nil
+}
+
+// TerminalStatusError reports a terminal GET_STATUS that is not exactly
+// "no paper, no error". Both fields are kept apart for diagnosis.
+type TerminalStatusError struct {
+	State      uint32 // offset 40; only ADFPaperMask is accepted
+	ErrorField uint32 // offset 44; only 0 is accepted (all 32 bits)
+}
+
+func (e *TerminalStatusError) Error() string {
+	var reasons []string
+	if e.State != ADFPaperMask {
+		reasons = append(reasons, fmt.Sprintf("scan state 0x%08X (expected 0x%08X, unknown bits 0x%08X)",
+			e.State, ADFPaperMask, e.State&^adfKnownMask))
+	}
+	if e.ErrorField != 0 {
+		reasons = append(reasons, fmt.Sprintf("error field 0x%08X (code 0x%04X, upper 0x%04X)",
+			e.ErrorField, e.ErrorField&0xFFFF, e.ErrorField>>16))
+	}
+	return "terminal status is not clean no-paper: " + strings.Join(reasons, "; ")
+}
+
+// statusFieldAttrs describes a GET_STATUS response word by word (offsets
+// 40-71; the header is never logged). No raw packet is logged (redact.go):
+// each 32-bit word is a named field in the form RegisterToken scrubs, so a
+// word equal to half of the session token is redacted by the handler.
+func statusFieldAttrs(phase string, resp []byte) []any {
+	word := func(offset int) (uint32, bool) {
+		if len(resp) < offset+4 {
+			return 0, false
+		}
+		return binary.BigEndian.Uint32(resp[offset : offset+4]), true
+	}
+	attrs := []any{"phase", phase, "bytes", len(resp)}
+	if state, ok := word(StatusRespScanStatusOffset); ok {
+		attrs = append(attrs, "state", fmt.Sprintf("0x%08X", state),
+			"no_paper", state&ADFPaperMask != 0, "cover_open", state&ADFCoverOpenMask != 0,
+			"jam", state&ADFJamMask != 0, "unknown_state_bits", fmt.Sprintf("0x%08X", state&^adfKnownMask))
+	}
+	if field, ok := word(StatusRespErrorOffset); ok {
+		attrs = append(attrs, "error_field", fmt.Sprintf("0x%08X", field),
+			"error_code", fmt.Sprintf("0x%04X", field&0xFFFF), "error_upper", fmt.Sprintf("0x%04X", field>>16))
+	}
+	for _, offset := range []int{48, 52, StatusRespDeviceFlagsOffset, 60, 64, 68} {
+		name := fmt.Sprintf("reserved_%d", offset)
+		if offset == StatusRespDeviceFlagsOffset {
+			name = "device_flags"
+		}
+		if v, ok := word(offset); ok {
+			attrs = append(attrs, name, fmt.Sprintf("0x%08X", v))
+		}
+	}
+	return attrs
+}
+
+// senseAttrs describes a REQUEST SENSE response (format, key, ASC, ASCQ).
+func senseAttrs(resp []byte) []any {
+	attrs := []any{"bytes", len(resp)}
+	if len(resp) >= SenseDataOffset+14 {
+		attrs = append(attrs, "format", fmt.Sprintf("0x%02X", resp[SenseDataOffset]&0x7f),
+			"key", fmt.Sprintf("0x%02X", resp[SenseDataOffset+2]&0x0f),
+			"asc", fmt.Sprintf("0x%02X", resp[SenseDataOffset+12]),
+			"ascq", fmt.Sprintf("0x%02X", resp[SenseDataOffset+13]))
+	}
+	return attrs
 }

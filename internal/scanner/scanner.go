@@ -217,6 +217,10 @@ func (s *Scanner) StartScan(ctx context.Context, source authz.Source, cfg vens.S
 		slog.Warn("scan refused", "source", source, "err", err)
 		return nil, err
 	}
+	if job, requested := authz.RequestedJob(ctx); requested && grant.JobID() != job {
+		grant.Finish(ctx, false)
+		return nil, fmt.Errorf("%w: browser command job mismatch", authz.ErrNotAuthorized)
+	}
 	// StartScan on the data channel already feeds the first sheet. Validate
 	// the entire binding BEFORE opening it, not merely before accepting pages.
 	validMode := false

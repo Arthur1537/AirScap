@@ -1,0 +1,506 @@
+{
+  "started": "2026-10-25T14:21:11.337521+00:00",
+  "network": {
+    "Name": "goal1-c27825d6-isolated",
+    "Id": "b88d70f05c7ba073594a6289eee8230a7b770179a9b97d0d84ab11a20910fe12",
+    "Created": "2026-10-25T14:21:07.098258559Z",
+    "Scope": "local",
+    "Driver": "bridge",
+    "EnableIPv4": true,
+    "EnableIPv6": false,
+    "IPAM": {
+      "Driver": "default",
+      "Options": {},
+      "Config": [
+        {
+          "Subnet": "172.31.134.0/24"
+        }
+      ]
+    },
+    "Internal": true,
+    "Attachable": false,
+    "Ingress": false,
+    "ConfigFrom": {
+      "Network": ""
+    },
+    "ConfigOnly": false,
+    "Containers": {
+      "362d89240445d75aea80884cf4f8bd874569b9dab4875e35760f17e49ebfec2d": {
+        "Name": "goal1-c27825d6-sim",
+        "EndpointID": "ac4f798d149285fb36b03d0b11f8725509745a3ab5bceeb7fef7e352ba4ac1db",
+        "MacAddress": "0e:1c:dc:c2:1d:e3",
+        "IPv4Address": "172.31.134.10/24",
+        "IPv6Address": ""
+      },
+      "41348c4ed9355778c7ecc8c9b5da49d38ea3cae9d225740e88e1e28575c22e5f": {
+        "Name": "goal1-c27825d6-anchor",
+        "EndpointID": "da4003e8670adc8bda9e0ba020dfd52d209ca6aaffdcf8c170465f9b841668e5",
+        "MacAddress": "5a:10:e0:1d:53:3f",
+        "IPv4Address": "172.31.134.20/24",
+        "IPv6Address": ""
+      }
+    },
+    "Options": {},
+    "Labels": {}
+  },
+  "images": {
+    "control": "sha256:046368107ebb57f6d8524c3fd9ca25cf7220cd573b82b80e1f3983c63133de4c",
+    "airscap": "sha256:7ff00d92260d32fd471003f30fc10e94041a1f8feba5efddeeb4d87b56f31e46",
+    "base-control": "sha256:811eee2c838c260c4f6ca8c35d578d24f68927d87bdfd432285af4745231b299",
+    "base-airscap": "sha256:d57717b153a44da6e8966990971b5302f527ffc0272dcdee45d85d505d203825",
+    "sim": "sha256:ea8abaee2a50e060970496bfee6ed3429e85828c9846f442f8c89c4cfdbc783e",
+    "browser": "sha256:aaf9aa4a5bd8b4c52046de36518295f56a7ebf49851c2b48d9df5af9dcd3f653",
+    "helper": "sha256:6ec3c0cd071c55dd50bf8cd193351dbf43e1c3f800b17555a43df8a08abd353d"
+  },
+  "baseline": {
+    "phase": "baseline",
+    "results": [
+      {
+        "name": "authenticated browser login",
+        "pass": true
+      },
+      {
+        "name": "Secure HttpOnly SameSite cookie",
+        "pass": true
+      },
+      {
+        "name": "no persistent browser bearer",
+        "pass": true
+      },
+      {
+        "name": "baseline browser scan is still hidden",
+        "pass": true
+      },
+      {
+        "baseline_job": "bfec46dcfdcc4e9b8a05137448c330d5"
+      }
+    ]
+  },
+  "goal": {
+    "phase": "goal",
+    "results": [
+      {
+        "name": "authenticated browser login",
+        "pass": true
+      },
+      {
+        "name": "Secure HttpOnly SameSite cookie",
+        "pass": true
+      },
+      {
+        "name": "no persistent browser bearer",
+        "pass": true
+      },
+      {
+        "name": "Scannen is visible but needs armed session",
+        "pass": true
+      },
+      {
+        "name": "unauthenticated browser scan refused",
+        "pass": true
+      },
+      {
+        "name": "browser simplex page count 2",
+        "pass": true
+      },
+      {
+        "name": "explicitly no worker attestation",
+        "pass": true
+      },
+      {
+        "name": "no publication before human review",
+        "pass": true
+      },
+      {
+        "name": "actual PDF bytes match manifest",
+        "pass": true
+      },
+      {
+        "name": "PDF contains received image pages",
+        "pass": true
+      },
+      {
+        "name": "background polling keeps review visible",
+        "pass": true
+      },
+      {
+        "name": "save replay is idempotent",
+        "pass": true
+      },
+      {
+        "name": "browser duplex page count 4",
+        "pass": true
+      },
+      {
+        "name": "explicitly no worker attestation",
+        "pass": true
+      },
+      {
+        "name": "no publication before human review",
+        "pass": true
+      },
+      {
+        "name": "actual PDF bytes match manifest",
+        "pass": true
+      },
+      {
+        "name": "PDF contains received image pages",
+        "pass": true
+      },
+      {
+        "name": "background polling keeps review visible",
+        "pass": true
+      },
+      {
+        "name": "save replay is idempotent",
+        "pass": true
+      },
+      {
+        "name": "physical button simplex page count 1",
+        "pass": true
+      },
+      {
+        "name": "explicitly no worker attestation",
+        "pass": true
+      },
+      {
+        "name": "no publication before human review",
+        "pass": true
+      },
+      {
+        "name": "actual PDF bytes match manifest",
+        "pass": true
+      },
+      {
+        "name": "PDF contains received image pages",
+        "pass": true
+      },
+      {
+        "name": "background polling keeps review visible",
+        "pass": true
+      },
+      {
+        "name": "save replay is idempotent",
+        "pass": true
+      },
+      {
+        "name": "H1 terminal condition stays rejected",
+        "pass": true
+      },
+      {
+        "name": "H1 releases no document",
+        "pass": true
+      },
+      {
+        "name": "readable terminal error",
+        "pass": true
+      },
+      {
+        "name": "recovery quarantines, never releases document",
+        "pass": true
+      },
+      {
+        "name": "H2 terminal condition stays rejected",
+        "pass": true
+      },
+      {
+        "name": "H2 releases no document",
+        "pass": true
+      },
+      {
+        "name": "readable terminal error",
+        "pass": true
+      },
+      {
+        "name": "recovery quarantines, never releases document",
+        "pass": true
+      },
+      {
+        "name": "H3 terminal condition stays rejected",
+        "pass": true
+      },
+      {
+        "name": "H3 releases no document",
+        "pass": true
+      },
+      {
+        "name": "readable terminal error",
+        "pass": true
+      },
+      {
+        "name": "recovery quarantines, never releases document",
+        "pass": true
+      },
+      {
+        "name": "jam after several received pages has no finished PDF",
+        "pass": true
+      },
+      {
+        "name": "paper jam classified",
+        "pass": true
+      },
+      {
+        "name": "recovery quarantines, never releases document",
+        "pass": true
+      },
+      {
+        "name": "browser simplex page count 1",
+        "pass": true
+      },
+      {
+        "name": "explicitly no worker attestation",
+        "pass": true
+      },
+      {
+        "name": "no publication before human review",
+        "pass": true
+      },
+      {
+        "name": "actual PDF bytes match manifest",
+        "pass": true
+      },
+      {
+        "name": "PDF contains received image pages",
+        "pass": true
+      },
+      {
+        "name": "background polling keeps review visible",
+        "pass": true
+      },
+      {
+        "name": "save replay is idempotent",
+        "pass": true
+      },
+      {
+        "saved": [
+          {
+            "job": "e1087ee21a0d4c56a726253ea9ba5c70",
+            "reservation": "70c74d32de734f21a1eda6c51996c0c2",
+            "sha256": "30d42e6b45b0e7c745e4b4a73471819dea3b1d21b767ec1b37d33074ecc92032",
+            "pages": 2
+          },
+          {
+            "job": "699478c249994db98985d76cb73fbc97",
+            "reservation": "ebf38b66daa6458884508793fd3b430d",
+            "sha256": "9ebb502033346ebe26980e829b37d1bfeb1966c6700d1482eed913bed1c68a8c",
+            "pages": 4
+          },
+          {
+            "job": "14f70457a2ed4c7284648aa17aae9d42",
+            "reservation": "4cce5abf73a7442e9db369b30f116f2a",
+            "sha256": "233c4f5e97f944a61f4b3872642e5551ea0ff271a1b8f19ac0a1608afcaf6688",
+            "pages": 1
+          },
+          {
+            "job": "fd5a6f15d5494c95857cb8eca9e76e42",
+            "reservation": "332c365ff13e46e9a815e26d8471c0b7",
+            "sha256": "233c4f5e97f944a61f4b3872642e5551ea0ff271a1b8f19ac0a1608afcaf6688",
+            "pages": 1
+          }
+        ],
+        "simulator_requests": [
+          "udp:discovery",
+          "control:reserve",
+          "data:12",
+          "control:status",
+          "data:12",
+          "data:EB",
+          "control:status",
+          "control:release",
+          "udp:discovery",
+          "control:reserve",
+          "data:12",
+          "control:status",
+          "data:12",
+          "data:EB",
+          "control:status",
+          "data:D8",
+          "data:D4",
+          "data:D5",
+          "data:C2",
+          "data:E0",
+          "data:28",
+          "data:03",
+          "data:C2",
+          "data:E0",
+          "data:28",
+          "data:03",
+          "data:C2",
+          "data:E0",
+          "data:C2",
+          "data:03",
+          "data:D6",
+          "control:status",
+          "data:D8",
+          "data:D4",
+          "data:D5",
+          "data:C2",
+          "data:E0",
+          "data:28",
+          "data:03",
+          "data:28",
+          "data:03",
+          "data:C2",
+          "data:E0",
+          "data:28",
+          "data:03",
+          "data:28",
+          "data:03",
+          "data:C2",
+          "data:E0",
+          "data:C2",
+          "data:03",
+          "data:D6",
+          "control:status",
+          "data:D8",
+          "data:D4",
+          "data:D5",
+          "data:C2",
+          "data:E0",
+          "data:28",
+          "data:03",
+          "data:C2",
+          "data:E0",
+          "data:C2",
+          "data:03",
+          "data:D6",
+          "control:status",
+          "data:D8",
+          "data:D4",
+          "data:D5",
+          "data:C2",
+          "data:E0",
+          "data:28",
+          "data:03",
+          "data:28",
+          "data:03",
+          "data:C2",
+          "data:E0",
+          "data:28",
+          "data:03",
+          "data:28",
+          "data:03",
+          "data:C2",
+          "data:E0",
+          "data:C2",
+          "data:03",
+          "data:C2",
+          "data:D6",
+          "data:D8",
+          "data:D4",
+          "data:D5",
+          "data:C2",
+          "data:E0",
+          "data:28",
+          "data:03",
+          "data:28",
+          "data:03",
+          "data:C2",
+          "data:E0",
+          "data:28",
+          "data:03",
+          "data:28",
+          "data:03",
+          "data:C2",
+          "data:E0",
+          "data:C2",
+          "data:03",
+          "data:C2",
+          "data:D6",
+          "data:D8",
+          "data:D4",
+          "data:D5",
+          "data:C2",
+          "data:E0",
+          "data:28",
+          "data:03",
+          "data:28",
+          "data:03",
+          "data:C2",
+          "data:E0",
+          "data:28",
+          "data:03",
+          "data:28",
+          "data:03",
+          "data:C2",
+          "data:E0",
+          "data:C2",
+          "data:03",
+          "data:C2",
+          "data:D6",
+          "data:D8",
+          "data:D4",
+          "data:D5",
+          "data:C2",
+          "data:E0",
+          "data:28",
+          "data:03",
+          "data:C2",
+          "data:E0",
+          "data:28",
+          "data:03",
+          "data:C2",
+          "data:E0",
+          "data:28",
+          "data:03",
+          "data:C2",
+          "data:E0",
+          "data:28",
+          "data:03",
+          "data:D6",
+          "data:D8",
+          "data:D4",
+          "data:D5",
+          "data:C2",
+          "data:E0",
+          "data:28",
+          "data:03",
+          "data:C2",
+          "data:E0",
+          "data:C2",
+          "data:03",
+          "data:D6",
+          "control:status"
+        ]
+      }
+    ]
+  },
+  "filesystem": {
+    "saved_files": 4,
+    "no_worker_lifecycle": true,
+    "failed_commands_quarantined": 4
+  },
+  "airscap_http": "{\"preview\": 403}\n",
+  "rollback_browser": {
+    "phase": "rollback",
+    "results": [
+      {
+        "name": "authenticated browser login",
+        "pass": true
+      },
+      {
+        "name": "Secure HttpOnly SameSite cookie",
+        "pass": true
+      },
+      {
+        "name": "no persistent browser bearer",
+        "pass": true
+      },
+      {
+        "name": "baseline browser scan is still hidden",
+        "pass": true
+      },
+      {
+        "name": "existing baseline job preserved",
+        "pass": true
+      }
+    ]
+  },
+  "rollback": {
+    "same_control_image": true,
+    "same_airscap_image": true,
+    "baseline_jobs_preserved": true,
+    "new_emergency_volume_preserved": true,
+    "emergency_restart_preserves_saved_documents": true
+  }
+}

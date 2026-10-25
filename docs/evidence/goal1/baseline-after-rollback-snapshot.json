@@ -1,0 +1,19 @@
+{
+  "files": {},
+  "records": {
+    "jobs": [
+      [
+        "bfec46dcfdcc4e9b8a05137448c330d5",
+        "letters",
+        "completed",
+        1792938081,
+        1792938081,
+        1792938081,
+        "91ebe0a66225a7093d805122530b2046a74f295180a0955c36798c2b262c12a9",
+        "{\"bleed_through\": false, \"color\": \"auto\", \"dpi\": 300, \"sides\": \"duplex\"}"
+      ]
+    ],
+    "scanner_reservations": [],
+    "document_lifecycle": []
+  }
+}

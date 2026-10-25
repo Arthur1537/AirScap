@@ -1,0 +1,19 @@
+{
+  "Id": "41348c4ed9355778c7ecc8c9b5da49d38ea3cae9d225740e88e1e28575c22e5f",
+  "Name": "/goal1-c27825d6-anchor",
+  "Image": "sha256:6ec3c0cd071c55dd50bf8cd193351dbf43e1c3f800b17555a43df8a08abd353d",
+  "State": {
+    "Status": "exited",
+    "Running": false,
+    "Paused": false,
+    "Restarting": false,
+    "OOMKilled": false,
+    "Dead": false,
+    "Pid": 0,
+    "ExitCode": 137,
+    "Error": "",
+    "StartedAt": "2026-10-25T14:21:11.220323328Z",
+    "FinishedAt": "2026-10-25T14:22:12.855929938Z"
+  },
+  "Mounts": []
+}

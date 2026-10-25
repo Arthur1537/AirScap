@@ -1,0 +1,19 @@
+{
+  "Id": "362d89240445d75aea80884cf4f8bd874569b9dab4875e35760f17e49ebfec2d",
+  "Name": "/goal1-c27825d6-sim",
+  "Image": "sha256:ea8abaee2a50e060970496bfee6ed3429e85828c9846f442f8c89c4cfdbc783e",
+  "State": {
+    "Status": "exited",
+    "Running": false,
+    "Paused": false,
+    "Restarting": false,
+    "OOMKilled": false,
+    "Dead": false,
+    "Pid": 0,
+    "ExitCode": 0,
+    "Error": "",
+    "StartedAt": "2026-10-25T14:21:09.5431654Z",
+    "FinishedAt": "2026-10-25T14:22:02.710708368Z"
+  },
+  "Mounts": []
+}
