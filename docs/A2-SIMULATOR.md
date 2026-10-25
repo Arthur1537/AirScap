@@ -54,7 +54,7 @@ Mutationstest bestätigt die Korrektur.
 Ergebnisse stehen in [`docs/evidence/a2/tests.txt`](evidence/a2/tests.txt):
 
 - volle Suite mit `go vet` und `-race` grün;
-- Simulator-Tests in drei Durchläufen: 27/27 PASS, kein SKIP.
+- Simulator- und Listener-Tests (9 Tests) in drei Durchläufen: 27/27 PASS, kein SKIP.
 
 ## 4. Einsatz in der Versionsmatrix
 
