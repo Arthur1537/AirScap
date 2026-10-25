@@ -1,0 +1,121 @@
+# A2 Testlauf (isolierter Container, --network none, Go 1.26.0), Commit 0f16d23
+# go vet ./... && go test -count=1 ./... && go test -count=1 -race ./internal/vens/... ./internal/scanner ./cmd/vensim
+ok  	github.com/mzyy94/airscap/cmd/airscap	0.017s
+?   	github.com/mzyy94/airscap/cmd/ndlocr-pdf	[no test files]
+ok  	github.com/mzyy94/airscap/cmd/vensim	0.009s
+ok  	github.com/mzyy94/airscap/internal/authz	0.033s
+ok  	github.com/mzyy94/airscap/internal/config	0.018s
+ok  	github.com/mzyy94/airscap/internal/scanner	5.342s
+?   	github.com/mzyy94/airscap/internal/testlock	[no test files]
+ok  	github.com/mzyy94/airscap/internal/vens	2.385s
+?   	github.com/mzyy94/airscap/internal/vens/vensim	[no test files]
+ok  	github.com/mzyy94/airscap/internal/webui	0.006s
+ok  	github.com/mzyy94/airscap/ndlocr	0.004s
+ok  	github.com/mzyy94/airscap/internal/vens	3.802s
+?   	github.com/mzyy94/airscap/internal/vens/vensim	[no test files]
+ok  	github.com/mzyy94/airscap/internal/scanner	8.400s
+ok  	github.com/mzyy94/airscap/cmd/vensim	1.029s
+
+# Simulator- und Listener-Tests, drei Durchläufe (-v)
+=== RUN   TestLostAuthorizationStopsScanAndFails
+--- PASS: TestLostAuthorizationStopsScanAndFails (0.00s)
+=== RUN   TestButtonListenerStopsBeforeContextEnds
+--- PASS: TestButtonListenerStopsBeforeContextEnds (0.00s)
+=== RUN   TestSimulatorPairingNeedsTheRightIdentity
+--- PASS: TestSimulatorPairingNeedsTheRightIdentity (0.30s)
+=== RUN   TestSimulatedButtonScanStagesAllPages
+=== RUN   TestSimulatedButtonScanStagesAllPages/simplex
+=== RUN   TestSimulatedButtonScanStagesAllPages/duplex
+--- PASS: TestSimulatedButtonScanStagesAllPages (0.70s)
+=== RUN   TestSimulatedScannerStates
+=== RUN   TestSimulatedScannerStates/no_paper
+=== RUN   TestSimulatedScannerStates/cover_open
+=== RUN   TestSimulatedScannerStates/jam_on_sheet_2
+=== RUN   TestSimulatedScannerStates/multi-feed_on_sheet_1
+--- PASS: TestSimulatedScannerStates (1.22s)
+=== RUN   TestSimulatedEndOfDocumentProfiles
+=== RUN   TestSimulatedEndOfDocumentProfiles/H0
+=== RUN   TestSimulatedEndOfDocumentProfiles/H0-scan-complete
+=== RUN   TestSimulatedEndOfDocumentProfiles/H1
+=== RUN   TestSimulatedEndOfDocumentProfiles/H2
+=== RUN   TestSimulatedEndOfDocumentProfiles/H3
+--- PASS: TestSimulatedEndOfDocumentProfiles (1.55s)
+=== RUN   TestSimulatedPagesAreTheScannersJPEGs
+--- PASS: TestSimulatedPagesAreTheScannersJPEGs (0.32s)
+=== RUN   TestSimulatorOfflineAndBack
+--- PASS: TestSimulatorOfflineAndBack (0.61s)
+=== RUN   TestSimulatedButtonPressReachesTheListener
+--- PASS: TestSimulatedButtonPressReachesTheListener (0.30s)
+PASS
+ok  	github.com/mzyy94/airscap/internal/scanner	5.019s
+PASS
+ok  	github.com/mzyy94/airscap/cmd/vensim	0.005s [no tests to run]
+=== RUN   TestLostAuthorizationStopsScanAndFails
+--- PASS: TestLostAuthorizationStopsScanAndFails (0.00s)
+=== RUN   TestButtonListenerStopsBeforeContextEnds
+--- PASS: TestButtonListenerStopsBeforeContextEnds (0.00s)
+=== RUN   TestSimulatorPairingNeedsTheRightIdentity
+--- PASS: TestSimulatorPairingNeedsTheRightIdentity (0.30s)
+=== RUN   TestSimulatedButtonScanStagesAllPages
+=== RUN   TestSimulatedButtonScanStagesAllPages/simplex
+=== RUN   TestSimulatedButtonScanStagesAllPages/duplex
+--- PASS: TestSimulatedButtonScanStagesAllPages (0.73s)
+=== RUN   TestSimulatedScannerStates
+=== RUN   TestSimulatedScannerStates/no_paper
+=== RUN   TestSimulatedScannerStates/cover_open
+=== RUN   TestSimulatedScannerStates/jam_on_sheet_2
+=== RUN   TestSimulatedScannerStates/multi-feed_on_sheet_1
+--- PASS: TestSimulatedScannerStates (1.22s)
+=== RUN   TestSimulatedEndOfDocumentProfiles
+=== RUN   TestSimulatedEndOfDocumentProfiles/H0
+=== RUN   TestSimulatedEndOfDocumentProfiles/H0-scan-complete
+=== RUN   TestSimulatedEndOfDocumentProfiles/H1
+=== RUN   TestSimulatedEndOfDocumentProfiles/H2
+=== RUN   TestSimulatedEndOfDocumentProfiles/H3
+--- PASS: TestSimulatedEndOfDocumentProfiles (1.56s)
+=== RUN   TestSimulatedPagesAreTheScannersJPEGs
+--- PASS: TestSimulatedPagesAreTheScannersJPEGs (0.32s)
+=== RUN   TestSimulatorOfflineAndBack
+--- PASS: TestSimulatorOfflineAndBack (0.61s)
+=== RUN   TestSimulatedButtonPressReachesTheListener
+--- PASS: TestSimulatedButtonPressReachesTheListener (0.30s)
+PASS
+ok  	github.com/mzyy94/airscap/internal/scanner	5.041s
+PASS
+ok  	github.com/mzyy94/airscap/cmd/vensim	0.004s [no tests to run]
+=== RUN   TestLostAuthorizationStopsScanAndFails
+--- PASS: TestLostAuthorizationStopsScanAndFails (0.00s)
+=== RUN   TestButtonListenerStopsBeforeContextEnds
+--- PASS: TestButtonListenerStopsBeforeContextEnds (0.00s)
+=== RUN   TestSimulatorPairingNeedsTheRightIdentity
+--- PASS: TestSimulatorPairingNeedsTheRightIdentity (0.30s)
+=== RUN   TestSimulatedButtonScanStagesAllPages
+=== RUN   TestSimulatedButtonScanStagesAllPages/simplex
+=== RUN   TestSimulatedButtonScanStagesAllPages/duplex
+--- PASS: TestSimulatedButtonScanStagesAllPages (0.69s)
+=== RUN   TestSimulatedScannerStates
+=== RUN   TestSimulatedScannerStates/no_paper
+=== RUN   TestSimulatedScannerStates/cover_open
+=== RUN   TestSimulatedScannerStates/jam_on_sheet_2
+=== RUN   TestSimulatedScannerStates/multi-feed_on_sheet_1
+--- PASS: TestSimulatedScannerStates (1.22s)
+=== RUN   TestSimulatedEndOfDocumentProfiles
+=== RUN   TestSimulatedEndOfDocumentProfiles/H0
+=== RUN   TestSimulatedEndOfDocumentProfiles/H0-scan-complete
+=== RUN   TestSimulatedEndOfDocumentProfiles/H1
+=== RUN   TestSimulatedEndOfDocumentProfiles/H2
+=== RUN   TestSimulatedEndOfDocumentProfiles/H3
+--- PASS: TestSimulatedEndOfDocumentProfiles (1.56s)
+=== RUN   TestSimulatedPagesAreTheScannersJPEGs
+--- PASS: TestSimulatedPagesAreTheScannersJPEGs (0.32s)
+=== RUN   TestSimulatorOfflineAndBack
+--- PASS: TestSimulatorOfflineAndBack (0.61s)
+=== RUN   TestSimulatedButtonPressReachesTheListener
+--- PASS: TestSimulatedButtonPressReachesTheListener (0.30s)
+PASS
+ok  	github.com/mzyy94/airscap/internal/scanner	5.000s
+PASS
+ok  	github.com/mzyy94/airscap/cmd/vensim	0.005s [no tests to run]
+
+# Simulator-Binary aus cmd/vensim/Dockerfile (0f16d23), bitgleich mit dem Matrix-Image vensim-matrix:a2 (8618c86)
+d9273ba8d430381fefb98247e1b38c2985739bbf749a2a88e3bbda1b99e2e068  /usr/local/bin/vensim
